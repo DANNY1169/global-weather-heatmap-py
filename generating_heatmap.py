@@ -97,6 +97,14 @@ def process_rar_file(rar_path, data_dir, result_dir):
     extracted_path = os.path.join(data_dir, rar_basename)
     fig = None
     
+    # Check if PNG file already exists in result directory
+    os.makedirs(result_dir, exist_ok=True)
+    output_path = os.path.join(result_dir, f'{rar_basename}.png')
+    if os.path.exists(output_path):
+        print(f"PNG file already exists: {output_path}")
+        print("Skipping processing for this RAR file.")
+        return True
+    
     def cleanup_extracted_files():
         """Helper function to clean up extracted files with retry logic."""
         if not os.path.exists(extracted_path):
@@ -327,11 +335,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         plt.tight_layout()
 
-        # Get the RAR filename without extension for the output PNG
+        # Save the PNG file (output_path was already determined at the start)
         try:
-            rar_filename = os.path.splitext(os.path.basename(rar_path))[0]
-            os.makedirs(result_dir, exist_ok=True)
-            output_path = os.path.join(result_dir, f'{rar_filename}.png')
             plt.savefig(output_path, dpi=300, bbox_inches='tight')
             print(f"Saved heatmap to: {output_path}")
         except Exception as e:
