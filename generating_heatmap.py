@@ -98,13 +98,66 @@ def process_rar_file(rar_path, data_dir, result_dir):
     fig = None
     
     def cleanup_extracted_files():
-        """Helper function to clean up extracted files."""
-        if os.path.exists(extracted_path):
+        """Helper function to clean up extracted files with retry logic."""
+        if not os.path.exists(extracted_path):
+            return
+        
+        max_retries = 5
+        retry_delay = 0.5  # seconds
+        
+        for attempt in range(max_retries):
             try:
-                shutil.rmtree(extracted_path)
+                # On Windows, try to remove read-only files first
+                if sys.platform == 'win32':
+                    import stat
+                    def remove_readonly(func, path, exc):
+                        try:
+                            os.chmod(path, stat.S_IWRITE)
+                            func(path)
+                        except:
+                            pass
+                    
+                    shutil.rmtree(extracted_path, onerror=remove_readonly)
+                else:
+                    shutil.rmtree(extracted_path)
+                
                 print(f"Cleaned up extracted directory: {extracted_path}")
+                return
+                
+            except PermissionError as e:
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                    continue
+                else:
+                    # Last attempt: try more aggressive cleanup
+                    try:
+                        if sys.platform == 'win32':
+                            # Try using Windows command to force delete
+                            subprocess.run(['cmd', '/c', 'rmdir', '/s', '/q', extracted_path], 
+                                         check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                        else:
+                            # Try using rm -rf on Linux/Mac
+                            subprocess.run(['rm', '-rf', extracted_path], 
+                                         check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                        if not os.path.exists(extracted_path):
+                            print(f"Cleaned up extracted directory: {extracted_path}")
+                            return
+                    except:
+                        pass
+                    print(f"Warning: Could not clean up {extracted_path} after {max_retries} attempts: {e}")
+                    print("Directory may be locked by another process. Please delete manually if needed.")
+                    
             except Exception as cleanup_error:
-                print(f"Warning: Could not clean up {extracted_path}: {cleanup_error}")
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2
+                    continue
+                else:
+                    print(f"Warning: Could not clean up {extracted_path} after {max_retries} attempts: {cleanup_error}")
+                    print("Directory may be locked by another process. Please delete manually if needed.")
     
     try:
         # Check if RAR file exists
@@ -163,25 +216,31 @@ def process_rar_file(rar_path, data_dir, result_dir):
         
         era5 = np.transpose(era5, (0,2,1,3))
         
-        openmeteo = openmeteo.reshape(45,90,16,16,24,6)
-        ecmwf = ecmwf.reshape(45,90,16,16,24,6)
-        noaa = noaa.reshape(45,90,16,16,24,6)
-        era5 = era5.reshape(45,90,16,16,24,6)
-        
-        openmeteo = openmeteo.transpose(0,2,1,3,4,5)
-        ecmwf = ecmwf.transpose(0,2,1,3,4,5)
-        noaa = noaa.transpose(0,2,1,3,4,5)
-        era5 = era5.transpose(0,2,1,3,4,5)
-        
-        openmeteo = openmeteo.reshape(45*16,90*16,24,6)
-        ecmwf = ecmwf.reshape(45*16,90*16,24,6)
-        noaa = noaa.reshape(45*16,90*16,24,6)
-        era5 = era5.reshape(45*16,90*16,24,6)
-        
-        openmeteo_2m_t, openmeteo_2m_d, openmeteo_u100, openmeteo_v100, openmeteo_precipitation, openmeteo_sp = np.split(openmeteo, 6, axis = -1)
-        ecmwf_2m_t, ecmwf_2m_d, ecmwf_u100, ecmwf_v100, ecmwf_precipitation, ecmwf_sp = np.split(ecmwf, 6, axis = -1)
-        noaa_2m_t, noaa_2m_d, noaa_u100, noaa_v100, noaa_precipitation, noaa_sp = np.split(noaa, 6, axis = -1)
-        era5_2m_t, era5_2m_d, era5_u100, era5_v100, era5_precipitation, era5_sp = np.split(era5, 6, axis = -1)
+        # Data processing with error handling
+        try:
+            openmeteo = openmeteo.reshape(45,90,16,16,24,6)
+            ecmwf = ecmwf.reshape(45,90,16,16,24,6)
+            noaa = noaa.reshape(45,90,16,16,24,6)
+            era5 = era5.reshape(45,90,16,16,24,6)
+            
+            openmeteo = openmeteo.transpose(0,2,1,3,4,5)
+            ecmwf = ecmwf.transpose(0,2,1,3,4,5)
+            noaa = noaa.transpose(0,2,1,3,4,5)
+            era5 = era5.transpose(0,2,1,3,4,5)
+            
+            openmeteo = openmeteo.reshape(45*16,90*16,24,6)
+            ecmwf = ecmwf.reshape(45*16,90*16,24,6)
+            noaa = noaa.reshape(45*16,90*16,24,6)
+            era5 = era5.reshape(45*16,90*16,24,6)
+            
+            openmeteo_2m_t, openmeteo_2m_d, openmeteo_u100, openmeteo_v100, openmeteo_precipitation, openmeteo_sp = np.split(openmeteo, 6, axis = -1)
+            ecmwf_2m_t, ecmwf_2m_d, ecmwf_u100, ecmwf_v100, ecmwf_precipitation, ecmwf_sp = np.split(ecmwf, 6, axis = -1)
+            noaa_2m_t, noaa_2m_d, noaa_u100, noaa_v100, noaa_precipitation, noaa_sp = np.split(noaa, 6, axis = -1)
+            era5_2m_t, era5_2m_d, era5_u100, era5_v100, era5_precipitation, era5_sp = np.split(era5, 6, axis = -1)
+        except Exception as e:
+            print(f"Error processing data arrays (reshape/transpose/split): {e}")
+            cleanup_extracted_files()
+            return False
         
         openmeteo_2m_t = openmeteo_2m_t.squeeze(axis = -1)
         openmeteo_2m_d = openmeteo_2m_d.squeeze(axis = -1)
@@ -228,51 +287,65 @@ def process_rar_file(rar_path, data_dir, result_dir):
         cmap = 'RdBu_r'  # or 'coolwarm', 'seismic', 'bwr'
         
         # Process each feature
-        for row_idx, (feature_name, om_data, ecmwf_data, noaa_data, era5_data) in enumerate(features):
-            # Calculate RMSE for each model
-            rmse_openmeteo = np.flip(np.sqrt(np.mean((om_data - era5_data) ** 2, axis=2)), axis=0)
-            rmse_ecmwf = np.flip(np.sqrt(np.mean((ecmwf_data - era5_data) ** 2, axis=2)), axis=0)
-            rmse_noaa = np.flip(np.sqrt(np.mean((noaa_data - era5_data) ** 2, axis=2)), axis=0)
-            
-            # Calculate differences relative to ECMWF
-            data1 = rmse_openmeteo - rmse_ecmwf
-            data3 = rmse_noaa - rmse_ecmwf
-            
-            # Find global min/max for symmetric color scaling
-            vmax = max(np.abs(data1).max(), np.abs(data3).max())
-            vmin = -vmax
-            
-            # Plot with symmetric color scaling
-            im0 = axes[row_idx, 0].imshow(data1, cmap=cmap, vmin=vmin, vmax=vmax)
-            axes[row_idx, 0].set_title(f'{feature_name}\nOpenMeteo - ECMWF\n(relative to ERA5)')
-            axes[row_idx, 0].axis('off')
-            
-            # Second plot shows absolute ECMWF RMSE
-            im1 = axes[row_idx, 1].imshow(rmse_ecmwf, cmap='viridis')
-            axes[row_idx, 1].set_title(f'{feature_name}\nECMWF RMSE\n(absolute values)')
-            axes[row_idx, 1].axis('off')
-            
-            im2 = axes[row_idx, 2].imshow(data3, cmap=cmap, vmin=vmin, vmax=vmax)
-            axes[row_idx, 2].set_title(f'{feature_name}\nNOAA - ECMWF\n(relative to ERA5)')
-            axes[row_idx, 2].axis('off')
-            
-            # Add colorbars
-            fig.colorbar(im0, ax=axes[row_idx, 0], fraction=0.046, pad=0.04)
-            fig.colorbar(im1, ax=axes[row_idx, 1], fraction=0.046, pad=0.04)
-            fig.colorbar(im2, ax=axes[row_idx, 2], fraction=0.046, pad=0.04)
+        try:
+            for row_idx, (feature_name, om_data, ecmwf_data, noaa_data, era5_data) in enumerate(features):
+                # Calculate RMSE for each model
+                rmse_openmeteo = np.flip(np.sqrt(np.mean((om_data - era5_data) ** 2, axis=2)), axis=0)
+                rmse_ecmwf = np.flip(np.sqrt(np.mean((ecmwf_data - era5_data) ** 2, axis=2)), axis=0)
+                rmse_noaa = np.flip(np.sqrt(np.mean((noaa_data - era5_data) ** 2, axis=2)), axis=0)
+                
+                # Calculate differences relative to ECMWF
+                data1 = rmse_openmeteo - rmse_ecmwf
+                data3 = rmse_noaa - rmse_ecmwf
+                
+                # Find global min/max for symmetric color scaling
+                vmax = max(np.abs(data1).max(), np.abs(data3).max())
+                vmin = -vmax
+                
+                # Plot with symmetric color scaling
+                im0 = axes[row_idx, 0].imshow(data1, cmap=cmap, vmin=vmin, vmax=vmax)
+                axes[row_idx, 0].set_title(f'{feature_name}\nOpenMeteo - ECMWF\n(relative to ERA5)')
+                axes[row_idx, 0].axis('off')
+                
+                # Second plot shows absolute ECMWF RMSE
+                im1 = axes[row_idx, 1].imshow(rmse_ecmwf, cmap='viridis')
+                axes[row_idx, 1].set_title(f'{feature_name}\nECMWF RMSE\n(absolute values)')
+                axes[row_idx, 1].axis('off')
+                
+                im2 = axes[row_idx, 2].imshow(data3, cmap=cmap, vmin=vmin, vmax=vmax)
+                axes[row_idx, 2].set_title(f'{feature_name}\nNOAA - ECMWF\n(relative to ERA5)')
+                axes[row_idx, 2].axis('off')
+                
+                # Add colorbars
+                fig.colorbar(im0, ax=axes[row_idx, 0], fraction=0.046, pad=0.04)
+                fig.colorbar(im1, ax=axes[row_idx, 1], fraction=0.046, pad=0.04)
+                fig.colorbar(im2, ax=axes[row_idx, 2], fraction=0.046, pad=0.04)
+        except Exception as e:
+            print(f"Error during heatmap generation: {e}")
+            cleanup_extracted_files()
+            return False
 
         plt.tight_layout()
 
         # Get the RAR filename without extension for the output PNG
-        rar_filename = os.path.splitext(os.path.basename(rar_path))[0]
-        os.makedirs(result_dir, exist_ok=True)
-        output_path = os.path.join(result_dir, f'{rar_filename}.png')
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        print(f"Saved heatmap to: {output_path}")
-        
-        # Close the figure to free memory
-        plt.close(fig)
-        fig = None
+        try:
+            rar_filename = os.path.splitext(os.path.basename(rar_path))[0]
+            os.makedirs(result_dir, exist_ok=True)
+            output_path = os.path.join(result_dir, f'{rar_filename}.png')
+            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            print(f"Saved heatmap to: {output_path}")
+        except Exception as e:
+            print(f"Error saving PNG file: {e}")
+            cleanup_extracted_files()
+            return False
+        finally:
+            # Close the figure to free memory
+            if fig is not None:
+                try:
+                    plt.close(fig)
+                except:
+                    pass
+            fig = None
 
         # Clean up: delete the extracted directory after successful processing
         cleanup_extracted_files()
@@ -292,13 +365,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
             except:
                 pass
         
-        # Clean up: delete the extracted directory even on error
-        if os.path.exists(extracted_path):
-            try:
-                shutil.rmtree(extracted_path)
-                print(f"Cleaned up extracted directory: {extracted_path}")
-            except Exception as cleanup_error:
-                print(f"Warning: Could not clean up {extracted_path}: {cleanup_error}")
+        # Always clean up extracted files for problematic RAR files
+        cleanup_extracted_files()
         
         return False
 
