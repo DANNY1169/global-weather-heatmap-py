@@ -6,6 +6,7 @@ import subprocess
 import sys
 import shutil
 import glob
+import argparse
 
 def find_pickle_file(directory, filename):
     """Recursively search for a pickle file in the directory."""
@@ -16,6 +17,10 @@ def find_pickle_file(directory, filename):
 
 def extract_rar_file(rar_path, extracted_path):
     """Extract a RAR file to the specified directory."""
+    # Convert to absolute paths
+    rar_path = os.path.abspath(rar_path)
+    extracted_path = os.path.abspath(extracted_path)
+    
     # Remove existing directory if it exists
     if os.path.exists(extracted_path):
         try:
@@ -34,7 +39,7 @@ def extract_rar_file(rar_path, extracted_path):
         print("Extraction complete.")
         return True
     except ImportError:
-        # Fallback: try using WinRAR command line (Windows)
+        # Fallback: try using WinRAR command line (Windows) or unrar (Linux)
         if sys.platform == 'win32':
             try:
                 # Try common WinRAR installation paths
@@ -49,7 +54,8 @@ def extract_rar_file(rar_path, extracted_path):
                         break
                 
                 if winrar_exe:
-                    subprocess.run([winrar_exe, 'x', '-y', rar_path, extracted_path + '\\'], 
+                    # Use absolute paths for Windows
+                    subprocess.run([winrar_exe, 'x', '-y', rar_path, extracted_path + os.sep], 
                                  check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     print("Extraction complete.")
                     return True
@@ -62,20 +68,33 @@ def extract_rar_file(rar_path, extracted_path):
                 print("2. Manually extract the RAR file to: " + extracted_path)
                 return False
         else:
-            print("Error: rarfile library not installed.")
-            print("Please install it with: pip install rarfile")
-            print("Or manually extract the RAR file to: " + extracted_path)
-            return False
+            # Try unrar on Linux/Mac
+            try:
+                subprocess.run(['unrar', 'x', '-y', rar_path, extracted_path + os.sep],
+                             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print("Extraction complete.")
+                return True
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                print("Error: rarfile library not installed and unrar not found.")
+                print("Please install it with: pip install rarfile")
+                print("Or install unrar: sudo apt-get install unrar (Linux) or brew install unrar (Mac)")
+                print("Or manually extract the RAR file to: " + extracted_path)
+                return False
 
-def process_rar_file(rar_path):
+def process_rar_file(rar_path, data_dir, result_dir):
     """Process a single RAR file: extract, generate heatmap, and clean up."""
     print(f"\n{'='*60}")
     print(f"Processing: {os.path.basename(rar_path)}")
     print(f"{'='*60}")
     
-    # Determine extracted path based on RAR filename (in current directory)
+    # Convert to absolute paths
+    rar_path = os.path.abspath(rar_path)
+    data_dir = os.path.abspath(data_dir)
+    result_dir = os.path.abspath(result_dir)
+    
+    # Determine extracted path based on RAR filename (in data directory)
     rar_basename = os.path.splitext(os.path.basename(rar_path))[0]
-    extracted_path = rar_basename
+    extracted_path = os.path.join(data_dir, rar_basename)
     fig = None
     
     def cleanup_extracted_files():
@@ -246,7 +265,6 @@ def process_rar_file(rar_path):
 
         # Get the RAR filename without extension for the output PNG
         rar_filename = os.path.splitext(os.path.basename(rar_path))[0]
-        result_dir = 'result'
         os.makedirs(result_dir, exist_ok=True)
         output_path = os.path.join(result_dir, f'{rar_filename}.png')
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
@@ -286,13 +304,44 @@ def process_rar_file(rar_path):
 
 # Main execution: Find and process all RAR files
 if __name__ == "__main__":
-    # Find all RAR files in the current directory
-    rar_files = glob.glob('*.rar')
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Process RAR files and generate heatmaps.')
+    parser.add_argument('--data', type=str, required=True,
+                        help='Path to directory containing RAR files (absolute or relative path)')
+    parser.add_argument('--result', type=str, default=None,
+                        help='Path to directory for output PNG files (default: result/ in project directory)')
     
-    if not rar_files:
-        print("No RAR files found in the current directory.")
+    args = parser.parse_args()
+    
+    # Convert to absolute paths
+    data_dir = os.path.abspath(args.data)
+    
+    # Set result directory to project directory (where script is located), not input directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.result:
+        result_dir = os.path.abspath(args.result)
+    else:
+        result_dir = os.path.join(script_dir, 'result')
+    
+    # Check if data directory exists
+    if not os.path.exists(data_dir):
+        print(f"Error: Data directory does not exist: {data_dir}")
         sys.exit(1)
     
+    if not os.path.isdir(data_dir):
+        print(f"Error: Path is not a directory: {data_dir}")
+        sys.exit(1)
+    
+    # Find all RAR files in the data directory
+    rar_pattern = os.path.join(data_dir, '*.rar')
+    rar_files = glob.glob(rar_pattern)
+    
+    if not rar_files:
+        print(f"No RAR files found in: {data_dir}")
+        sys.exit(1)
+    
+    print(f"Data directory: {data_dir}")
+    print(f"Result directory: {result_dir}")
     print(f"Found {len(rar_files)} RAR file(s) to process.")
     
     # Process each RAR file one by one
@@ -301,7 +350,7 @@ if __name__ == "__main__":
     
     for rar_path in sorted(rar_files):
         try:
-            if process_rar_file(rar_path):
+            if process_rar_file(rar_path, data_dir, result_dir):
                 successful += 1
             else:
                 failed += 1
