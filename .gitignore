@@ -28,6 +28,8 @@ ENV/
 
 data/
 
+*.png
+
 # IDE
 .vscode/
 .idea/
@@ -57,4 +59,5 @@ data/
 # OS
 Thumbs.db
 .DS_Store
+
 

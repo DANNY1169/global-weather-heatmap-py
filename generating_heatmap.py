@@ -1,10 +1,88 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+import os
+import subprocess
+import sys
+import shutil
 
+# Extract RAR file if needed
+rar_path = 'data/2025-12-18.rar'
+extracted_path = 'data/2025-12-18'
+
+def find_pickle_file(directory, filename):
+    """Recursively search for a pickle file in the directory."""
+    for root, dirs, files in os.walk(directory):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+# Check if required files exist
+api_x_path = find_pickle_file(extracted_path, 'api_x.pkl') if os.path.exists(extracted_path) else None
+y_path = find_pickle_file(extracted_path, 'y.pkl') if os.path.exists(extracted_path) else None
+
+# Extract if directory doesn't exist or required files are missing
+if not api_x_path or not y_path:
+    # Remove existing directory if it's empty or incomplete
+    if os.path.exists(extracted_path):
+        try:
+            shutil.rmtree(extracted_path)
+        except:
+            pass
+    
+    print(f"Extracting {rar_path}...")
+    os.makedirs(extracted_path, exist_ok=True)
+    
+    # Try using rarfile library first
+    try:
+        import rarfile
+        with rarfile.RarFile(rar_path) as rf:
+            rf.extractall(extracted_path)
+        print("Extraction complete.")
+    except ImportError:
+        # Fallback: try using WinRAR command line (Windows)
+        if sys.platform == 'win32':
+            try:
+                # Try common WinRAR installation paths
+                winrar_paths = [
+                    r'C:\Program Files\WinRAR\WinRAR.exe',
+                    r'C:\Program Files (x86)\WinRAR\WinRAR.exe',
+                ]
+                winrar_exe = None
+                for path in winrar_paths:
+                    if os.path.exists(path):
+                        winrar_exe = path
+                        break
+                
+                if winrar_exe:
+                    subprocess.run([winrar_exe, 'x', '-y', rar_path, extracted_path + '\\'], 
+                                 check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    print("Extraction complete.")
+                else:
+                    raise Exception("WinRAR not found. Please install WinRAR or install rarfile: pip install rarfile")
+            except Exception as e:
+                print(f"Error extracting RAR file: {e}")
+                print("Please either:")
+                print("1. Install rarfile: pip install rarfile (requires unrar executable)")
+                print("2. Manually extract the RAR file to: " + extracted_path)
+                sys.exit(1)
+        else:
+            print("Error: rarfile library not installed.")
+            print("Please install it with: pip install rarfile")
+            print("Or manually extract the RAR file to: " + extracted_path)
+            sys.exit(1)
+    
+    # Find the files after extraction
+    api_x_path = find_pickle_file(extracted_path, 'api_x.pkl')
+    y_path = find_pickle_file(extracted_path, 'y.pkl')
+    
+    if not api_x_path or not y_path:
+        print(f"Error: Could not find required pickle files in {extracted_path}")
+        print("Please check the RAR file structure.")
+        sys.exit(1)
 
 # Load data from pickle files
-with open('2025-12-29/api_x.pkl', 'rb') as f:
+with open(api_x_path, 'rb') as f:
     data_3 = pickle.load(f)
 data_3 = np.array(data_3)
 openmeteo, ecmwf, noaa = np.split(data_3, 3, axis = -1)
@@ -16,7 +94,7 @@ ecmwf = np.transpose(ecmwf, (0,2,1,3))
 noaa = np.transpose(noaa, (0,2,1,3))
 
 
-with open('2025-12-29/y.pkl', 'rb') as f:
+with open(y_path, 'rb') as f:
     era5 = pickle.load(f)
 era5 = np.array(era5)
 
@@ -121,6 +199,22 @@ for row_idx, (feature_name, om_data, ecmwf_data, noaa_data, era5_data) in enumer
     fig.colorbar(im2, ax=axes[row_idx, 2], fraction=0.046, pad=0.04)
 
 plt.tight_layout()
-plt.savefig('2025-12-29/2025-12-29.png', dpi=300, bbox_inches='tight')
+
+# Get the RAR filename without extension for the output PNG
+rar_filename = os.path.splitext(os.path.basename(rar_path))[0]
+result_dir = 'result'
+os.makedirs(result_dir, exist_ok=True)
+output_path = os.path.join(result_dir, f'{rar_filename}.png')
+plt.savefig(output_path, dpi=300, bbox_inches='tight')
+print(f"Saved heatmap to: {output_path}")
+
+# Clean up: delete the extracted directory
+if os.path.exists(extracted_path):
+    try:
+        shutil.rmtree(extracted_path)
+        print(f"Deleted extracted directory: {extracted_path}")
+    except Exception as e:
+        print(f"Warning: Could not delete {extracted_path}: {e}")
+
 plt.show()
 
