@@ -1,3 +1,7 @@
-numpy>=2.4.1
-matplotlib>=3.10.8
+# Required dependencies
+numpy>=1.20.0
+matplotlib>=3.3.0
+
+# Optional dependencies (for RAR file extraction)
+# If rarfile is not installed, the script will use WinRAR (Windows) or unrar (Linux/Mac) as fallback
 rarfile>=4.0

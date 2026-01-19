@@ -16,54 +16,99 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
 venv/
 env/
 ENV/
 .venv
+env.bak/
+venv.bak/
 
-data/
-
-*.png
-
-*.rar
-
-# IDE
-.vscode/
+# PyCharm
 .idea/
-*.swp
-*.swo
-*~
-.DS_Store
+
+# VS Code
+.vscode/
+*.code-workspace
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
 
-# Environment variables
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
 .env
 .env.local
+.env.*.local
 
-# Data files (uncomment if you want to ignore data files)
-# *.pkl
-# *.rar
-# data/
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# Results/output files (uncomment if you want to ignore generated results)
-# result/
-# *.png
-# *.jpg
-# *.pdf
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Data files
+data/
+*.pkl
+*.rar
+*.zip
+
+# Output/Result files
+result/
+*.png
+*.jpg
+*.jpeg
+*.pdf
 
 # OS
-Thumbs.db
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+*~
 
-
-
-
-
+# Project specific
+extracted/
+temp/
