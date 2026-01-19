@@ -39,47 +39,54 @@ def extract_rar_file(rar_path, extracted_path):
         print("Extraction complete.")
         return True
     except ImportError:
-        # Fallback: try using WinRAR command line (Windows) or unrar (Linux)
-        if sys.platform == 'win32':
-            try:
-                # Try common WinRAR installation paths
-                winrar_paths = [
-                    r'C:\Program Files\WinRAR\WinRAR.exe',
-                    r'C:\Program Files (x86)\WinRAR\WinRAR.exe',
-                ]
-                winrar_exe = None
-                for path in winrar_paths:
-                    if os.path.exists(path):
-                        winrar_exe = path
-                        break
-                
-                if winrar_exe:
-                    # Use absolute paths for Windows
-                    subprocess.run([winrar_exe, 'x', '-y', rar_path, extracted_path + os.sep], 
-                                 check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    print("Extraction complete.")
-                    return True
-                else:
-                    raise Exception("WinRAR not found. Please install WinRAR or install rarfile: pip install rarfile")
-            except Exception as e:
-                print(f"Error extracting RAR file: {e}")
-                print("Please either:")
-                print("1. Install rarfile: pip install rarfile (requires unrar executable)")
-                print("2. Manually extract the RAR file to: " + extracted_path)
-                return False
-        else:
-            # Try unrar on Linux/Mac
-            try:
-                subprocess.run(['unrar', 'x', '-y', rar_path, extracted_path + os.sep],
+        # rarfile library not installed, try fallback
+        pass
+    except Exception as e:
+        # rarfile library error (BadRarFile, RarCannotExec, etc.), try fallback
+        print(f"rarfile library error: {e}")
+        print("Trying fallback extraction method...")
+    
+    # Fallback: try using WinRAR command line (Windows) or unrar (Linux)
+    if sys.platform == 'win32':
+        try:
+            # Try common WinRAR installation paths
+            winrar_paths = [
+                r'C:\Program Files\WinRAR\WinRAR.exe',
+                r'C:\Program Files (x86)\WinRAR\WinRAR.exe',
+            ]
+            winrar_exe = None
+            for path in winrar_paths:
+                if os.path.exists(path):
+                    winrar_exe = path
+                    break
+            
+            if winrar_exe:
+                # Use absolute paths for Windows
+                subprocess.run([winrar_exe, 'x', '-y', rar_path, extracted_path + os.sep], 
                              check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 print("Extraction complete.")
                 return True
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("Error: rarfile library not installed and unrar not found.")
-                print("Please install it with: pip install rarfile")
-                print("Or install unrar: sudo apt-get install unrar (Linux) or brew install unrar (Mac)")
-                print("Or manually extract the RAR file to: " + extracted_path)
-                return False
+            else:
+                raise Exception("WinRAR not found. Please install WinRAR or install rarfile: pip install rarfile")
+        except Exception as e:
+            print(f"Error extracting RAR file: {e}")
+            print("Please either:")
+            print("1. Install rarfile: pip install rarfile (requires unrar executable)")
+            print("2. Manually extract the RAR file to: " + extracted_path)
+            return False
+    else:
+        # Try unrar on Linux/Mac
+        try:
+            subprocess.run(['unrar', 'x', '-y', rar_path, extracted_path + os.sep],
+                         check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("Extraction complete.")
+            return True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("Error: rarfile library not installed and unrar not found.")
+            print("Please install it with: pip install rarfile")
+            print("Or install unrar: sudo apt-get install unrar (Linux) or brew install unrar (Mac)")
+            print("Or manually extract the RAR file to: " + extracted_path)
+            return False
 
 def process_rar_file(rar_path, data_dir, result_dir):
     """Process a single RAR file: extract, generate heatmap, and clean up."""
@@ -221,43 +228,73 @@ def process_rar_file(rar_path, data_dir, result_dir):
         graphcast = graphcast.squeeze(axis = -1)
         aifs = aifs.squeeze(axis = -1)
 
-        best_match = best_match.reshape(720, 1440, 5, 4, 6)
-        ecmwf_ifs = ecmwf_ifs.reshape(720, 1440, 5, 4, 6)
-        gfs_global = gfs_global.reshape(720, 1440, 5, 4, 6)
-        graphcast = graphcast.reshape(720, 1440, 5, 4, 6)
-        aifs = aifs.reshape(720, 1440, 5, 4, 6)
+        best_match_1d = best_match[:,:,0:4,:]
+        best_match_2d = best_match[:,:,4:8,:]
+        best_match_3d = best_match[:,:,8:12,:]
+        best_match_4d = best_match[:,:,12:16,:]
+        best_match_5d = best_match[:,:,16:20,:]
 
-        best_match_1d, best_match_2d, best_match_3d, best_match_4d, best_match_5d = np.split(best_match, 5, axis = 2) 
-        ecmwf_ifs_1d, ecmwf_ifs_2d, ecmwf_ifs_3d, ecmwf_ifs_4d, ecmwf_ifs_5d = np.split(ecmwf_ifs, 5, axis = 2)
-        gfs_global_1d, gfs_global_2d, gfs_global_3d, gfs_global_4d, gfs_global_5d = np.split(gfs_global, 5, axis = 2)
-        graphcast_1d, graphcast_2d, graphcast_3d, graphcast_4d, graphcast_5d = np.split(graphcast, 5, axis = 2)
-        aifs_1d, aifs_2d, aifs_3d, aifs_4d, aifs_5d = np.split(aifs, 5, axis = 2)
+        ecmwf_ifs_1d = ecmwf_ifs[:,:,0:4,:]
+        ecmwf_ifs_2d = ecmwf_ifs[:,:,4:8,:]
+        ecmwf_ifs_3d = ecmwf_ifs[:,:,8:12,:]
+        ecmwf_ifs_4d = ecmwf_ifs[:,:,12:16,:]
+        ecmwf_ifs_5d = ecmwf_ifs[:,:,16:20,:]
 
-        best_match_1d = best_match_1d.squeeze(axis = 2)
-        best_match_2d = best_match_2d.squeeze(axis = 2)
-        best_match_3d = best_match_3d.squeeze(axis = 2)
-        best_match_4d = best_match_4d.squeeze(axis = 2)
-        best_match_5d = best_match_5d.squeeze(axis = 2)
-        ecmwf_ifs_1d = ecmwf_ifs_1d.squeeze(axis = 2)
-        ecmwf_ifs_2d = ecmwf_ifs_2d.squeeze(axis = 2)
-        ecmwf_ifs_3d = ecmwf_ifs_3d.squeeze(axis = 2)
-        ecmwf_ifs_4d = ecmwf_ifs_4d.squeeze(axis = 2)
-        ecmwf_ifs_5d = ecmwf_ifs_5d.squeeze(axis = 2)
-        gfs_global_1d = gfs_global_1d.squeeze(axis = 2)
-        gfs_global_2d = gfs_global_2d.squeeze(axis = 2)
-        gfs_global_3d = gfs_global_3d.squeeze(axis = 2)
-        gfs_global_4d = gfs_global_4d.squeeze(axis = 2)
-        gfs_global_5d = gfs_global_5d.squeeze(axis = 2)
-        graphcast_1d = graphcast_1d.squeeze(axis = 2)
-        graphcast_2d = graphcast_2d.squeeze(axis = 2)
-        graphcast_3d = graphcast_3d.squeeze(axis = 2)
-        graphcast_4d = graphcast_4d.squeeze(axis = 2)
-        graphcast_5d = graphcast_5d.squeeze(axis = 2)
-        aifs_1d = aifs_1d.squeeze(axis = 2)
-        aifs_2d = aifs_2d.squeeze(axis = 2)
-        aifs_3d = aifs_3d.squeeze(axis = 2)
-        aifs_4d = aifs_4d.squeeze(axis = 2)
-        aifs_5d = aifs_5d.squeeze(axis = 2)
+        gfs_global_1d = gfs_global[:,:,0:4,:]
+        gfs_global_2d = gfs_global[:,:,4:8,:]
+        gfs_global_3d = gfs_global[:,:,8:12,:]
+        gfs_global_4d = gfs_global[:,:,12:16,:]
+        gfs_global_5d = gfs_global[:,:,16:20,:]
+        
+        graphcast_1d = graphcast[:,:,0:4,:]
+        graphcast_2d = graphcast[:,:,4:8,:]
+        graphcast_3d = graphcast[:,:,8:12,:]
+        graphcast_4d = graphcast[:,:,12:16,:]
+        graphcast_5d = graphcast[:,:,16:20,:]
+
+        aifs_1d = aifs[:,:,0:4,:]
+        aifs_2d = aifs[:,:,4:8,:]
+        aifs_3d = aifs[:,:,8:12,:]
+        aifs_4d = aifs[:,:,12:16,:]
+        aifs_5d = aifs[:,:,16:20,:]
+
+        # best_match = best_match.reshape(720, 1440, 5, 4, 6)
+        # ecmwf_ifs = ecmwf_ifs.reshape(720, 1440, 5, 4, 6)
+        # gfs_global = gfs_global.reshape(720, 1440, 5, 4, 6)
+        # graphcast = graphcast.reshape(720, 1440, 5, 4, 6)
+        # aifs = aifs.reshape(720, 1440, 5, 4, 6)
+
+        # best_match_1d, best_match_2d, best_match_3d, best_match_4d, best_match_5d = np.split(best_match, 5, axis = 2) 
+        # ecmwf_ifs_1d, ecmwf_ifs_2d, ecmwf_ifs_3d, ecmwf_ifs_4d, ecmwf_ifs_5d = np.split(ecmwf_ifs, 5, axis = 2)
+        # gfs_global_1d, gfs_global_2d, gfs_global_3d, gfs_global_4d, gfs_global_5d = np.split(gfs_global, 5, axis = 2)
+        # graphcast_1d, graphcast_2d, graphcast_3d, graphcast_4d, graphcast_5d = np.split(graphcast, 5, axis = 2)
+        # aifs_1d, aifs_2d, aifs_3d, aifs_4d, aifs_5d = np.split(aifs, 5, axis = 2)
+
+        # best_match_1d = best_match_1d.squeeze(axis = 2)
+        # best_match_2d = best_match_2d.squeeze(axis = 2)
+        # best_match_3d = best_match_3d.squeeze(axis = 2)
+        # best_match_4d = best_match_4d.squeeze(axis = 2)
+        # best_match_5d = best_match_5d.squeeze(axis = 2)
+        # ecmwf_ifs_1d = ecmwf_ifs_1d.squeeze(axis = 2)
+        # ecmwf_ifs_2d = ecmwf_ifs_2d.squeeze(axis = 2)
+        # ecmwf_ifs_3d = ecmwf_ifs_3d.squeeze(axis = 2)
+        # ecmwf_ifs_4d = ecmwf_ifs_4d.squeeze(axis = 2)
+        # ecmwf_ifs_5d = ecmwf_ifs_5d.squeeze(axis = 2)
+        # gfs_global_1d = gfs_global_1d.squeeze(axis = 2)
+        # gfs_global_2d = gfs_global_2d.squeeze(axis = 2)
+        # gfs_global_3d = gfs_global_3d.squeeze(axis = 2)
+        # gfs_global_4d = gfs_global_4d.squeeze(axis = 2)
+        # gfs_global_5d = gfs_global_5d.squeeze(axis = 2)
+        # graphcast_1d = graphcast_1d.squeeze(axis = 2)
+        # graphcast_2d = graphcast_2d.squeeze(axis = 2)
+        # graphcast_3d = graphcast_3d.squeeze(axis = 2)
+        # graphcast_4d = graphcast_4d.squeeze(axis = 2)
+        # graphcast_5d = graphcast_5d.squeeze(axis = 2)
+        # aifs_1d = aifs_1d.squeeze(axis = 2)
+        # aifs_2d = aifs_2d.squeeze(axis = 2)
+        # aifs_3d = aifs_3d.squeeze(axis = 2)
+        # aifs_4d = aifs_4d.squeeze(axis = 2)
+        # aifs_5d = aifs_5d.squeeze(axis = 2)
 
         try:
             with open(y_path, 'rb') as f:
@@ -268,13 +305,20 @@ def process_rar_file(rar_path, data_dir, result_dir):
             cleanup_extracted_files()
             return False
         
-        era5 = era5.reshape(720, 1440, 5, 4, 6)
-        era5_1d, era5_2d, era5_3d, era5_4d, era5_5d = np.split(era5, 5, axis = 2)
-        era5_1d = era5_1d.squeeze(axis = 2)
-        era5_2d = era5_2d.squeeze(axis = 2)
-        era5_3d = era5_3d.squeeze(axis = 2)
-        era5_4d = era5_4d.squeeze(axis = 2)
-        era5_5d = era5_5d.squeeze(axis = 2)
+
+        era5_1d = era5[:,:,0:4,:]
+        era5_2d = era5[:,:,4:8,:]
+        era5_3d = era5[:,:,8:12,:]
+        era5_4d = era5[:,:,12:16,:]
+        era5_5d = era5[:,:,16:20,:]
+
+        # era5 = era5.reshape(720, 1440, 5, 4, 6)
+        # era5_1d, era5_2d, era5_3d, era5_4d, era5_5d = np.split(era5, 5, axis = 2)
+        # era5_1d = era5_1d.squeeze(axis = 2)
+        # era5_2d = era5_2d.squeeze(axis = 2)
+        # era5_3d = era5_3d.squeeze(axis = 2)
+        # era5_4d = era5_4d.squeeze(axis = 2)
+        # era5_5d = era5_5d.squeeze(axis = 2)
 
         best_match_1d_2t, best_match_1d_2d, best_match_1d_100u, best_match_1d_100v, best_match_1d_tp, best_match_1d_sp = np.split(best_match_1d, 6, axis = -1)
         best_match_2d_2t, best_match_2d_2d, best_match_2d_100u, best_match_2d_100v, best_match_2d_tp, best_match_2d_sp = np.split(best_match_2d, 6, axis = -1)
@@ -284,36 +328,36 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         best_match_1d_2t = best_match_1d_2t.squeeze(axis = -1)
         best_match_1d_2d = best_match_1d_2d.squeeze(axis = -1)
-        best_match_1d_100u = best_match_1d_100u.squeeze(axis = -1)
-        best_match_1d_100v = best_match_1d_100v.squeeze(axis = -1)
+        best_match_1d_100u = best_match_1d_100u.squeeze(axis = -1)/3.6
+        best_match_1d_100v = best_match_1d_100v.squeeze(axis = -1)/3.6
         best_match_1d_tp = best_match_1d_tp.squeeze(axis = -1)
         best_match_1d_sp = best_match_1d_sp.squeeze(axis = -1)
 
         best_match_2d_2t = best_match_2d_2t.squeeze(axis = -1)
         best_match_2d_2d = best_match_2d_2d.squeeze(axis = -1)
-        best_match_2d_100u = best_match_2d_100u.squeeze(axis = -1)
-        best_match_2d_100v = best_match_2d_100v.squeeze(axis = -1)
+        best_match_2d_100u = best_match_2d_100u.squeeze(axis = -1)/3.6
+        best_match_2d_100v = best_match_2d_100v.squeeze(axis = -1)/3.6
         best_match_2d_tp = best_match_2d_tp.squeeze(axis = -1)
         best_match_2d_sp = best_match_2d_sp.squeeze(axis = -1)
 
         best_match_3d_2t = best_match_3d_2t.squeeze(axis = -1)
         best_match_3d_2d = best_match_3d_2d.squeeze(axis = -1)
-        best_match_3d_100u = best_match_3d_100u.squeeze(axis = -1)
-        best_match_3d_100v = best_match_3d_100v.squeeze(axis = -1)
+        best_match_3d_100u = best_match_3d_100u.squeeze(axis = -1)/3.6
+        best_match_3d_100v = best_match_3d_100v.squeeze(axis = -1)/3.6
         best_match_3d_tp = best_match_3d_tp.squeeze(axis = -1)
         best_match_3d_sp = best_match_3d_sp.squeeze(axis = -1)
 
         best_match_4d_2t = best_match_4d_2t.squeeze(axis = -1)
         best_match_4d_2d = best_match_4d_2d.squeeze(axis = -1)
-        best_match_4d_100u = best_match_4d_100u.squeeze(axis = -1)
-        best_match_4d_100v = best_match_4d_100v.squeeze(axis = -1)
+        best_match_4d_100u = best_match_4d_100u.squeeze(axis = -1)/3.6
+        best_match_4d_100v = best_match_4d_100v.squeeze(axis = -1)/3.6
         best_match_4d_tp = best_match_4d_tp.squeeze(axis = -1)
         best_match_4d_sp = best_match_4d_sp.squeeze(axis = -1)
 
         best_match_5d_2t = best_match_5d_2t.squeeze(axis = -1)
         best_match_5d_2d = best_match_5d_2d.squeeze(axis = -1)
-        best_match_5d_100u = best_match_5d_100u.squeeze(axis = -1)
-        best_match_5d_100v = best_match_5d_100v.squeeze(axis = -1)
+        best_match_5d_100u = best_match_5d_100u.squeeze(axis = -1)/3.6
+        best_match_5d_100v = best_match_5d_100v.squeeze(axis = -1)/3.6
         best_match_5d_tp = best_match_5d_tp.squeeze(axis = -1)
         best_match_5d_sp = best_match_5d_sp.squeeze(axis = -1)
 
@@ -325,36 +369,36 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         ecmwf_ifs_1d_2t = ecmwf_ifs_1d_2t.squeeze(axis = -1)
         ecmwf_ifs_1d_2d = ecmwf_ifs_1d_2d.squeeze(axis = -1)
-        ecmwf_ifs_1d_100u = ecmwf_ifs_1d_100u.squeeze(axis = -1)
-        ecmwf_ifs_1d_100v = ecmwf_ifs_1d_100v.squeeze(axis = -1)
+        ecmwf_ifs_1d_100u = ecmwf_ifs_1d_100u.squeeze(axis = -1)/3.6
+        ecmwf_ifs_1d_100v = ecmwf_ifs_1d_100v.squeeze(axis = -1)/3.6
         ecmwf_ifs_1d_tp = ecmwf_ifs_1d_tp.squeeze(axis = -1)
         ecmwf_ifs_1d_sp = ecmwf_ifs_1d_sp.squeeze(axis = -1)
 
         ecmwf_ifs_2d_2t = ecmwf_ifs_2d_2t.squeeze(axis = -1)
         ecmwf_ifs_2d_2d = ecmwf_ifs_2d_2d.squeeze(axis = -1)
-        ecmwf_ifs_2d_100u = ecmwf_ifs_2d_100u.squeeze(axis = -1)
-        ecmwf_ifs_2d_100v = ecmwf_ifs_2d_100v.squeeze(axis = -1)
+        ecmwf_ifs_2d_100u = ecmwf_ifs_2d_100u.squeeze(axis = -1)/3.6
+        ecmwf_ifs_2d_100v = ecmwf_ifs_2d_100v.squeeze(axis = -1)/3.6
         ecmwf_ifs_2d_tp = ecmwf_ifs_2d_tp.squeeze(axis = -1)
         ecmwf_ifs_2d_sp = ecmwf_ifs_2d_sp.squeeze(axis = -1)
 
         ecmwf_ifs_3d_2t = ecmwf_ifs_3d_2t.squeeze(axis = -1)
         ecmwf_ifs_3d_2d = ecmwf_ifs_3d_2d.squeeze(axis = -1)
-        ecmwf_ifs_3d_100u = ecmwf_ifs_3d_100u.squeeze(axis = -1)
-        ecmwf_ifs_3d_100v = ecmwf_ifs_3d_100v.squeeze(axis = -1)
+        ecmwf_ifs_3d_100u = ecmwf_ifs_3d_100u.squeeze(axis = -1)/3.6
+        ecmwf_ifs_3d_100v = ecmwf_ifs_3d_100v.squeeze(axis = -1)/3.6
         ecmwf_ifs_3d_tp = ecmwf_ifs_3d_tp.squeeze(axis = -1)
         ecmwf_ifs_3d_sp = ecmwf_ifs_3d_sp.squeeze(axis = -1)
 
         ecmwf_ifs_4d_2t = ecmwf_ifs_4d_2t.squeeze(axis = -1)
         ecmwf_ifs_4d_2d = ecmwf_ifs_4d_2d.squeeze(axis = -1)
-        ecmwf_ifs_4d_100u = ecmwf_ifs_4d_100u.squeeze(axis = -1)
-        ecmwf_ifs_4d_100v = ecmwf_ifs_4d_100v.squeeze(axis = -1)
+        ecmwf_ifs_4d_100u = ecmwf_ifs_4d_100u.squeeze(axis = -1)/3.6
+        ecmwf_ifs_4d_100v = ecmwf_ifs_4d_100v.squeeze(axis = -1)/3.6
         ecmwf_ifs_4d_tp = ecmwf_ifs_4d_tp.squeeze(axis = -1)
         ecmwf_ifs_4d_sp = ecmwf_ifs_4d_sp.squeeze(axis = -1)
 
         ecmwf_ifs_5d_2t = ecmwf_ifs_5d_2t.squeeze(axis = -1)
         ecmwf_ifs_5d_2d = ecmwf_ifs_5d_2d.squeeze(axis = -1)
-        ecmwf_ifs_5d_100u = ecmwf_ifs_5d_100u.squeeze(axis = -1)
-        ecmwf_ifs_5d_100v = ecmwf_ifs_5d_100v.squeeze(axis = -1)
+        ecmwf_ifs_5d_100u = ecmwf_ifs_5d_100u.squeeze(axis = -1)/3.6
+        ecmwf_ifs_5d_100v = ecmwf_ifs_5d_100v.squeeze(axis = -1)/3.6
         ecmwf_ifs_5d_tp = ecmwf_ifs_5d_tp.squeeze(axis = -1)
         ecmwf_ifs_5d_sp = ecmwf_ifs_5d_sp.squeeze(axis = -1)
 
@@ -366,36 +410,36 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         gfs_global_1d_2t = gfs_global_1d_2t.squeeze(axis = -1)
         gfs_global_1d_2d = gfs_global_1d_2d.squeeze(axis = -1)
-        gfs_global_1d_100u = gfs_global_1d_100u.squeeze(axis = -1)
-        gfs_global_1d_100v = gfs_global_1d_100v.squeeze(axis = -1)
+        gfs_global_1d_100u = gfs_global_1d_100u.squeeze(axis = -1)/3.6
+        gfs_global_1d_100v = gfs_global_1d_100v.squeeze(axis = -1)/3.6
         gfs_global_1d_tp = gfs_global_1d_tp.squeeze(axis = -1)
         gfs_global_1d_sp = gfs_global_1d_sp.squeeze(axis = -1)
 
         gfs_global_2d_2t = gfs_global_2d_2t.squeeze(axis = -1)
         gfs_global_2d_2d = gfs_global_2d_2d.squeeze(axis = -1)
-        gfs_global_2d_100u = gfs_global_2d_100u.squeeze(axis = -1)
-        gfs_global_2d_100v = gfs_global_2d_100v.squeeze(axis = -1)
+        gfs_global_2d_100u = gfs_global_2d_100u.squeeze(axis = -1)/3.6
+        gfs_global_2d_100v = gfs_global_2d_100v.squeeze(axis = -1)/3.6
         gfs_global_2d_tp = gfs_global_2d_tp.squeeze(axis = -1)
         gfs_global_2d_sp = gfs_global_2d_sp.squeeze(axis = -1)
 
         gfs_global_3d_2t = gfs_global_3d_2t.squeeze(axis = -1)
         gfs_global_3d_2d = gfs_global_3d_2d.squeeze(axis = -1)
-        gfs_global_3d_100u = gfs_global_3d_100u.squeeze(axis = -1)
-        gfs_global_3d_100v = gfs_global_3d_100v.squeeze(axis = -1)
+        gfs_global_3d_100u = gfs_global_3d_100u.squeeze(axis = -1)/3.6
+        gfs_global_3d_100v = gfs_global_3d_100v.squeeze(axis = -1)/3.6
         gfs_global_3d_tp = gfs_global_3d_tp.squeeze(axis = -1)
         gfs_global_3d_sp = gfs_global_3d_sp.squeeze(axis = -1)
 
         gfs_global_4d_2t = gfs_global_4d_2t.squeeze(axis = -1)
         gfs_global_4d_2d = gfs_global_4d_2d.squeeze(axis = -1)
-        gfs_global_4d_100u = gfs_global_4d_100u.squeeze(axis = -1)
-        gfs_global_4d_100v = gfs_global_4d_100v.squeeze(axis = -1)
+        gfs_global_4d_100u = gfs_global_4d_100u.squeeze(axis = -1)/3.6
+        gfs_global_4d_100v = gfs_global_4d_100v.squeeze(axis = -1)/3.6
         gfs_global_4d_tp = gfs_global_4d_tp.squeeze(axis = -1)
         gfs_global_4d_sp = gfs_global_4d_sp.squeeze(axis = -1)
 
         gfs_global_5d_2t = gfs_global_5d_2t.squeeze(axis = -1)
         gfs_global_5d_2d = gfs_global_5d_2d.squeeze(axis = -1)
-        gfs_global_5d_100u = gfs_global_5d_100u.squeeze(axis = -1)
-        gfs_global_5d_100v = gfs_global_5d_100v.squeeze(axis = -1)
+        gfs_global_5d_100u = gfs_global_5d_100u.squeeze(axis = -1)/3.6
+        gfs_global_5d_100v = gfs_global_5d_100v.squeeze(axis = -1)/3.6
         gfs_global_5d_tp = gfs_global_5d_tp.squeeze(axis = -1)
         gfs_global_5d_sp = gfs_global_5d_sp.squeeze(axis = -1)
 
@@ -407,36 +451,36 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         graphcast_1d_2t = graphcast_1d_2t.squeeze(axis = -1)
         graphcast_1d_2d = graphcast_1d_2d.squeeze(axis = -1)
-        graphcast_1d_100u = graphcast_1d_100u.squeeze(axis = -1)
-        graphcast_1d_100v = graphcast_1d_100v.squeeze(axis = -1)
+        graphcast_1d_100u = graphcast_1d_100u.squeeze(axis = -1)/3.6
+        graphcast_1d_100v = graphcast_1d_100v.squeeze(axis = -1)/3.6
         graphcast_1d_tp = graphcast_1d_tp.squeeze(axis = -1)
         graphcast_1d_sp = graphcast_1d_sp.squeeze(axis = -1)
 
         graphcast_2d_2t = graphcast_2d_2t.squeeze(axis = -1)
         graphcast_2d_2d = graphcast_2d_2d.squeeze(axis = -1)
-        graphcast_2d_100u = graphcast_2d_100u.squeeze(axis = -1)
-        graphcast_2d_100v = graphcast_2d_100v.squeeze(axis = -1)
+        graphcast_2d_100u = graphcast_2d_100u.squeeze(axis = -1)/3.6
+        graphcast_2d_100v = graphcast_2d_100v.squeeze(axis = -1)/3.6
         graphcast_2d_tp = graphcast_2d_tp.squeeze(axis = -1)
         graphcast_2d_sp = graphcast_2d_sp.squeeze(axis = -1)
 
         graphcast_3d_2t = graphcast_3d_2t.squeeze(axis = -1)
         graphcast_3d_2d = graphcast_3d_2d.squeeze(axis = -1)
-        graphcast_3d_100u = graphcast_3d_100u.squeeze(axis = -1)
-        graphcast_3d_100v = graphcast_3d_100v.squeeze(axis = -1)
+        graphcast_3d_100u = graphcast_3d_100u.squeeze(axis = -1)/3.6
+        graphcast_3d_100v = graphcast_3d_100v.squeeze(axis = -1)/3.6
         graphcast_3d_tp = graphcast_3d_tp.squeeze(axis = -1)
         graphcast_3d_sp = graphcast_3d_sp.squeeze(axis = -1)
 
         graphcast_4d_2t = graphcast_4d_2t.squeeze(axis = -1)
         graphcast_4d_2d = graphcast_4d_2d.squeeze(axis = -1)
-        graphcast_4d_100u = graphcast_4d_100u.squeeze(axis = -1)
-        graphcast_4d_100v = graphcast_4d_100v.squeeze(axis = -1)
+        graphcast_4d_100u = graphcast_4d_100u.squeeze(axis = -1)/3.6
+        graphcast_4d_100v = graphcast_4d_100v.squeeze(axis = -1)/3.6
         graphcast_4d_tp = graphcast_4d_tp.squeeze(axis = -1)
         graphcast_4d_sp = graphcast_4d_sp.squeeze(axis = -1)
 
         graphcast_5d_2t = graphcast_5d_2t.squeeze(axis = -1)
         graphcast_5d_2d = graphcast_5d_2d.squeeze(axis = -1)
-        graphcast_5d_100u = graphcast_5d_100u.squeeze(axis = -1)
-        graphcast_5d_100v = graphcast_5d_100v.squeeze(axis = -1)
+        graphcast_5d_100u = graphcast_5d_100u.squeeze(axis = -1)/3.6
+        graphcast_5d_100v = graphcast_5d_100v.squeeze(axis = -1)/3.6
         graphcast_5d_tp = graphcast_5d_tp.squeeze(axis = -1)
         graphcast_5d_sp = graphcast_5d_sp.squeeze(axis = -1)
 
@@ -448,36 +492,36 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         aifs_1d_2t = aifs_1d_2t.squeeze(axis = -1)
         aifs_1d_2d = aifs_1d_2d.squeeze(axis = -1)
-        aifs_1d_100u = aifs_1d_100u.squeeze(axis = -1)
-        aifs_1d_100v = aifs_1d_100v.squeeze(axis = -1)
+        aifs_1d_100u = aifs_1d_100u.squeeze(axis = -1)/3.6
+        aifs_1d_100v = aifs_1d_100v.squeeze(axis = -1)/3.6
         aifs_1d_tp = aifs_1d_tp.squeeze(axis = -1)
         aifs_1d_sp = aifs_1d_sp.squeeze(axis = -1)
 
         aifs_2d_2t = aifs_2d_2t.squeeze(axis = -1)
         aifs_2d_2d = aifs_2d_2d.squeeze(axis = -1)
-        aifs_2d_100u = aifs_2d_100u.squeeze(axis = -1)
-        aifs_2d_100v = aifs_2d_100v.squeeze(axis = -1)
+        aifs_2d_100u = aifs_2d_100u.squeeze(axis = -1)/3.6
+        aifs_2d_100v = aifs_2d_100v.squeeze(axis = -1)/3.6
         aifs_2d_tp = aifs_2d_tp.squeeze(axis = -1)
         aifs_2d_sp = aifs_2d_sp.squeeze(axis = -1)
 
         aifs_3d_2t = aifs_3d_2t.squeeze(axis = -1)
         aifs_3d_2d = aifs_3d_2d.squeeze(axis = -1)
-        aifs_3d_100u = aifs_3d_100u.squeeze(axis = -1)
-        aifs_3d_100v = aifs_3d_100v.squeeze(axis = -1)
+        aifs_3d_100u = aifs_3d_100u.squeeze(axis = -1)/3.6
+        aifs_3d_100v = aifs_3d_100v.squeeze(axis = -1)/3.6
         aifs_3d_tp = aifs_3d_tp.squeeze(axis = -1)
         aifs_3d_sp = aifs_3d_sp.squeeze(axis = -1)
 
         aifs_4d_2t = aifs_4d_2t.squeeze(axis = -1)
         aifs_4d_2d = aifs_4d_2d.squeeze(axis = -1)
-        aifs_4d_100u = aifs_4d_100u.squeeze(axis = -1)
-        aifs_4d_100v = aifs_4d_100v.squeeze(axis = -1)
+        aifs_4d_100u = aifs_4d_100u.squeeze(axis = -1)/3.6
+        aifs_4d_100v = aifs_4d_100v.squeeze(axis = -1)/3.6
         aifs_4d_tp = aifs_4d_tp.squeeze(axis = -1)
         aifs_4d_sp = aifs_4d_sp.squeeze(axis = -1)
 
         aifs_5d_2t = aifs_5d_2t.squeeze(axis = -1)
         aifs_5d_2d = aifs_5d_2d.squeeze(axis = -1)
-        aifs_5d_100u = aifs_5d_100u.squeeze(axis = -1)
-        aifs_5d_100v = aifs_5d_100v.squeeze(axis = -1)
+        aifs_5d_100u = aifs_5d_100u.squeeze(axis = -1)/3.6
+        aifs_5d_100v = aifs_5d_100v.squeeze(axis = -1)/3.6
         aifs_5d_tp = aifs_5d_tp.squeeze(axis = -1)
         aifs_5d_sp = aifs_5d_sp.squeeze(axis = -1)
 
@@ -489,36 +533,36 @@ def process_rar_file(rar_path, data_dir, result_dir):
 
         era5_1d_2t = era5_1d_2t.squeeze(axis = -1)
         era5_1d_2d = era5_1d_2d.squeeze(axis = -1)
-        era5_1d_100u = era5_1d_100u.squeeze(axis = -1)
-        era5_1d_100v = era5_1d_100v.squeeze(axis = -1)
+        era5_1d_100u = era5_1d_100u.squeeze(axis = -1)/3.6
+        era5_1d_100v = era5_1d_100v.squeeze(axis = -1)/3.6
         era5_1d_tp = era5_1d_tp.squeeze(axis = -1)
         era5_1d_sp = era5_1d_sp.squeeze(axis = -1)
 
         era5_2d_2t = era5_2d_2t.squeeze(axis = -1)
         era5_2d_2d = era5_2d_2d.squeeze(axis = -1)
-        era5_2d_100u = era5_2d_100u.squeeze(axis = -1)
-        era5_2d_100v = era5_2d_100v.squeeze(axis = -1)
+        era5_2d_100u = era5_2d_100u.squeeze(axis = -1)/3.6
+        era5_2d_100v = era5_2d_100v.squeeze(axis = -1)/3.6
         era5_2d_tp = era5_2d_tp.squeeze(axis = -1)
         era5_2d_sp = era5_2d_sp.squeeze(axis = -1)
 
         era5_3d_2t = era5_3d_2t.squeeze(axis = -1)
         era5_3d_2d = era5_3d_2d.squeeze(axis = -1)
-        era5_3d_100u = era5_3d_100u.squeeze(axis = -1)
-        era5_3d_100v = era5_3d_100v.squeeze(axis = -1)
+        era5_3d_100u = era5_3d_100u.squeeze(axis = -1)/3.6
+        era5_3d_100v = era5_3d_100v.squeeze(axis = -1)/3.6
         era5_3d_tp = era5_3d_tp.squeeze(axis = -1)
         era5_3d_sp = era5_3d_sp.squeeze(axis = -1)
 
         era5_4d_2t = era5_4d_2t.squeeze(axis = -1)
         era5_4d_2d = era5_4d_2d.squeeze(axis = -1)
-        era5_4d_100u = era5_4d_100u.squeeze(axis = -1)
-        era5_4d_100v = era5_4d_100v.squeeze(axis = -1)
+        era5_4d_100u = era5_4d_100u.squeeze(axis = -1)/3.6
+        era5_4d_100v = era5_4d_100v.squeeze(axis = -1)/3.6
         era5_4d_tp = era5_4d_tp.squeeze(axis = -1)
         era5_4d_sp = era5_4d_sp.squeeze(axis = -1)
 
         era5_5d_2t = era5_5d_2t.squeeze(axis = -1)
         era5_5d_2d = era5_5d_2d.squeeze(axis = -1)
-        era5_5d_100u = era5_5d_100u.squeeze(axis = -1)
-        era5_5d_100v = era5_5d_100v.squeeze(axis = -1)
+        era5_5d_100u = era5_5d_100u.squeeze(axis = -1)/3.6
+        era5_5d_100v = era5_5d_100v.squeeze(axis = -1)/3.6
         era5_5d_tp = era5_5d_tp.squeeze(axis = -1)
         era5_5d_sp = era5_5d_sp.squeeze(axis = -1)
 
@@ -606,11 +650,11 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     rmse_graphcast = np.flip(np.sqrt(np.mean((graphcast_data - era5_data) ** 2, axis=2)), axis=0)
                     rmse_aifs = np.flip(np.sqrt(np.mean((aifs_data - era5_data) ** 2, axis=2)), axis=0)
                     
-                    global_rmse_best_match = rmse_best_match.mean() - rmse_ecmwf_ifs.mean()
                     global_rmse_ecmwf_ifs = rmse_ecmwf_ifs.mean()
-                    global_rmse_gfs_global = rmse_gfs_global.mean() - rmse_ecmwf_ifs.mean()
-                    global_rmse_graphcast = rmse_graphcast.mean() - rmse_ecmwf_ifs.mean()
-                    global_rmse_aifs = rmse_aifs.mean() - rmse_ecmwf_ifs.mean()
+                    global_rmse_best_match = rmse_best_match.mean() - global_rmse_ecmwf_ifs
+                    global_rmse_gfs_global = rmse_gfs_global.mean() - global_rmse_ecmwf_ifs
+                    global_rmse_graphcast = rmse_graphcast.mean() - global_rmse_ecmwf_ifs
+                    global_rmse_aifs = rmse_aifs.mean() - global_rmse_ecmwf_ifs
 
                     # Calculate differences relative to ECMWF
                     data1 = rmse_best_match - rmse_ecmwf_ifs
