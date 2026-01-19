@@ -1,4 +1,3 @@
-# Global Weather Heatmap Generator
 
 A Python script that processes RAR files containing weather forecast data and generates comparative heatmaps showing RMSE (Root Mean Square Error) differences between various weather models relative to ERA5 reference data. The script processes hourly forecast data (1h through 20h) and generates separate visualizations for each hour.
 
