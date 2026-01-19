@@ -606,6 +606,12 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     rmse_graphcast = np.flip(np.sqrt(np.mean((graphcast_data - era5_data) ** 2, axis=2)), axis=0)
                     rmse_aifs = np.flip(np.sqrt(np.mean((aifs_data - era5_data) ** 2, axis=2)), axis=0)
                     
+                    global_rmse_best_match = rmse_best_match.mean() - rmse_ecmwf_ifs.mean()
+                    global_rmse_ecmwf_ifs = rmse_ecmwf_ifs.mean()
+                    global_rmse_gfs_global = rmse_gfs_global.mean() - rmse_ecmwf_ifs.mean()
+                    global_rmse_graphcast = rmse_graphcast.mean() - rmse_ecmwf_ifs.mean()
+                    global_rmse_aifs = rmse_aifs.mean() - rmse_ecmwf_ifs.mean()
+
                     # Calculate differences relative to ECMWF
                     data1 = rmse_best_match - rmse_ecmwf_ifs
                     data3 = rmse_gfs_global - rmse_ecmwf_ifs
@@ -620,23 +626,33 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     im0 = axes[row_idx, 0].imshow(data1, cmap=cmap, vmin=vmin, vmax=vmax)
                     axes[row_idx, 0].set_title(f'{feature_name} ({day})\nBest Match - ECMWF\n(relative to ERA5)')
                     axes[row_idx, 0].axis('off')
+                    axes[row_idx, 0].text(0.5, -0.08, f'Global RMSE: {global_rmse_best_match:.4f}', 
+                                          transform=axes[row_idx, 0].transAxes, ha='center', va='top', fontsize=9)
                     
                     # Second plot shows absolute ECMWF RMSE
                     im1 = axes[row_idx, 1].imshow(rmse_ecmwf_ifs, cmap='viridis')
                     axes[row_idx, 1].set_title(f'{feature_name} ({day})\nECMWF RMSE\n(absolute values)')
                     axes[row_idx, 1].axis('off')
+                    axes[row_idx, 1].text(0.5, -0.08, f'Global RMSE: {global_rmse_ecmwf_ifs:.4f}', 
+                                          transform=axes[row_idx, 1].transAxes, ha='center', va='top', fontsize=9)
                     
                     im2 = axes[row_idx, 2].imshow(data3, cmap=cmap, vmin=vmin, vmax=vmax)
                     axes[row_idx, 2].set_title(f'{feature_name} ({day})\nGFS Global - ECMWF\n(relative to ERA5)')
                     axes[row_idx, 2].axis('off')
+                    axes[row_idx, 2].text(0.5, -0.08, f'Global RMSE: {global_rmse_gfs_global:.4f}', 
+                                          transform=axes[row_idx, 2].transAxes, ha='center', va='top', fontsize=9)
                     
                     im3 = axes[row_idx, 3].imshow(data4, cmap=cmap, vmin=vmin, vmax=vmax)
                     axes[row_idx, 3].set_title(f'{feature_name} ({day})\nGraphcast - ECMWF\n(relative to ERA5)')
                     axes[row_idx, 3].axis('off')
+                    axes[row_idx, 3].text(0.5, -0.08, f'Global RMSE: {global_rmse_graphcast:.4f}', 
+                                          transform=axes[row_idx, 3].transAxes, ha='center', va='top', fontsize=9)
                     
                     im4 = axes[row_idx, 4].imshow(data5, cmap=cmap, vmin=vmin, vmax=vmax)
                     axes[row_idx, 4].set_title(f'{feature_name} ({day})\nAIFS - ECMWF\n(relative to ERA5)')
                     axes[row_idx, 4].axis('off')
+                    axes[row_idx, 4].text(0.5, -0.08, f'Global RMSE: {global_rmse_aifs:.4f}', 
+                                          transform=axes[row_idx, 4].transAxes, ha='center', va='top', fontsize=9)
 
                     # Add colorbars
                     fig.colorbar(im0, ax=axes[row_idx, 0], fraction=0.046, pad=0.04)
@@ -645,7 +661,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     fig.colorbar(im3, ax=axes[row_idx, 3], fraction=0.046, pad=0.04)
                     fig.colorbar(im4, ax=axes[row_idx, 4], fraction=0.046, pad=0.04)
                 
-                plt.tight_layout()
+                plt.tight_layout(rect=[0, 0.03, 1, 0.98])  # Leave space at bottom for global RMSE text
+                plt.subplots_adjust(bottom=0.05)  # Additional bottom margin for text
                 
                 # Save the PNG file for this day
                 try:
