@@ -97,11 +97,20 @@ def process_rar_file(rar_path, data_dir, result_dir):
     extracted_path = os.path.join(data_dir, rar_basename)
     fig = None
     
-    # Check if PNG file already exists in result directory
-    os.makedirs(result_dir, exist_ok=True)
-    output_path = os.path.join(result_dir, f'{rar_basename}.png')
-    if os.path.exists(output_path):
-        print(f"PNG file already exists: {output_path}")
+    # Create subdirectory for this RAR file in result directory
+    rar_output_dir = os.path.join(result_dir, rar_basename)
+    os.makedirs(rar_output_dir, exist_ok=True)
+    
+    # Check if all PNG files already exist (one per day: 1d, 2d, 3d, 4d, 5d)
+    all_pngs_exist = True
+    for day in ['1d', '2d', '3d', '4d', '5d']:
+        png_path = os.path.join(rar_output_dir, f'{rar_basename}_{day}.png')
+        if not os.path.exists(png_path):
+            all_pngs_exist = False
+            break
+    
+    if all_pngs_exist:
+        print(f"All PNG files already exist for {rar_basename}")
         print("Skipping processing for this RAR file.")
         return True
     
@@ -205,14 +214,51 @@ def process_rar_file(rar_path, data_dir, result_dir):
             cleanup_extracted_files()
             return False
         
-        openmeteo, ecmwf, noaa = np.split(data_3, 3, axis = -1)
-        openmeteo = openmeteo.squeeze(axis = -1)
-        ecmwf = ecmwf.squeeze(axis = -1)
-        noaa = noaa.squeeze(axis = -1)
-        openmeteo = np.transpose(openmeteo, (0,2,1,3))
-        ecmwf = np.transpose(ecmwf, (0,2,1,3))
-        noaa = np.transpose(noaa, (0,2,1,3))
-        
+        best_match, ecmwf_ifs, gfs_global, graphcast, aifs = np.split(data_3, 5, axis = -1)
+        best_match = best_match.squeeze(axis = -1)
+        ecmwf_ifs = ecmwf_ifs.squeeze(axis = -1)
+        gfs_global = gfs_global.squeeze(axis = -1)
+        graphcast = graphcast.squeeze(axis = -1)
+        aifs = aifs.squeeze(axis = -1)
+
+        best_match = best_match.reshape(720, 1440, 5, 4, 6)
+        ecmwf_ifs = ecmwf_ifs.reshape(720, 1440, 5, 4, 6)
+        gfs_global = gfs_global.reshape(720, 1440, 5, 4, 6)
+        graphcast = graphcast.reshape(720, 1440, 5, 4, 6)
+        aifs = aifs.reshape(720, 1440, 5, 4, 6)
+
+        best_match_1d, best_match_2d, best_match_3d, best_match_4d, best_match_5d = np.split(best_match, 5, axis = 2) 
+        ecmwf_ifs_1d, ecmwf_ifs_2d, ecmwf_ifs_3d, ecmwf_ifs_4d, ecmwf_ifs_5d = np.split(ecmwf_ifs, 5, axis = 2)
+        gfs_global_1d, gfs_global_2d, gfs_global_3d, gfs_global_4d, gfs_global_5d = np.split(gfs_global, 5, axis = 2)
+        graphcast_1d, graphcast_2d, graphcast_3d, graphcast_4d, graphcast_5d = np.split(graphcast, 5, axis = 2)
+        aifs_1d, aifs_2d, aifs_3d, aifs_4d, aifs_5d = np.split(aifs, 5, axis = 2)
+
+        best_match_1d = best_match_1d.squeeze(axis = 2)
+        best_match_2d = best_match_2d.squeeze(axis = 2)
+        best_match_3d = best_match_3d.squeeze(axis = 2)
+        best_match_4d = best_match_4d.squeeze(axis = 2)
+        best_match_5d = best_match_5d.squeeze(axis = 2)
+        ecmwf_ifs_1d = ecmwf_ifs_1d.squeeze(axis = 2)
+        ecmwf_ifs_2d = ecmwf_ifs_2d.squeeze(axis = 2)
+        ecmwf_ifs_3d = ecmwf_ifs_3d.squeeze(axis = 2)
+        ecmwf_ifs_4d = ecmwf_ifs_4d.squeeze(axis = 2)
+        ecmwf_ifs_5d = ecmwf_ifs_5d.squeeze(axis = 2)
+        gfs_global_1d = gfs_global_1d.squeeze(axis = 2)
+        gfs_global_2d = gfs_global_2d.squeeze(axis = 2)
+        gfs_global_3d = gfs_global_3d.squeeze(axis = 2)
+        gfs_global_4d = gfs_global_4d.squeeze(axis = 2)
+        gfs_global_5d = gfs_global_5d.squeeze(axis = 2)
+        graphcast_1d = graphcast_1d.squeeze(axis = 2)
+        graphcast_2d = graphcast_2d.squeeze(axis = 2)
+        graphcast_3d = graphcast_3d.squeeze(axis = 2)
+        graphcast_4d = graphcast_4d.squeeze(axis = 2)
+        graphcast_5d = graphcast_5d.squeeze(axis = 2)
+        aifs_1d = aifs_1d.squeeze(axis = 2)
+        aifs_2d = aifs_2d.squeeze(axis = 2)
+        aifs_3d = aifs_3d.squeeze(axis = 2)
+        aifs_4d = aifs_4d.squeeze(axis = 2)
+        aifs_5d = aifs_5d.squeeze(axis = 2)
+
         try:
             with open(y_path, 'rb') as f:
                 era5 = pickle.load(f)
@@ -222,135 +268,406 @@ def process_rar_file(rar_path, data_dir, result_dir):
             cleanup_extracted_files()
             return False
         
-        era5 = np.transpose(era5, (0,2,1,3))
-        
-        # Data processing with error handling
-        try:
-            openmeteo = openmeteo.reshape(45,90,16,16,24,6)
-            ecmwf = ecmwf.reshape(45,90,16,16,24,6)
-            noaa = noaa.reshape(45,90,16,16,24,6)
-            era5 = era5.reshape(45,90,16,16,24,6)
-            
-            openmeteo = openmeteo.transpose(0,2,1,3,4,5)
-            ecmwf = ecmwf.transpose(0,2,1,3,4,5)
-            noaa = noaa.transpose(0,2,1,3,4,5)
-            era5 = era5.transpose(0,2,1,3,4,5)
-            
-            openmeteo = openmeteo.reshape(45*16,90*16,24,6)
-            ecmwf = ecmwf.reshape(45*16,90*16,24,6)
-            noaa = noaa.reshape(45*16,90*16,24,6)
-            era5 = era5.reshape(45*16,90*16,24,6)
-            
-            openmeteo_2m_t, openmeteo_2m_d, openmeteo_u100, openmeteo_v100, openmeteo_precipitation, openmeteo_sp = np.split(openmeteo, 6, axis = -1)
-            ecmwf_2m_t, ecmwf_2m_d, ecmwf_u100, ecmwf_v100, ecmwf_precipitation, ecmwf_sp = np.split(ecmwf, 6, axis = -1)
-            noaa_2m_t, noaa_2m_d, noaa_u100, noaa_v100, noaa_precipitation, noaa_sp = np.split(noaa, 6, axis = -1)
-            era5_2m_t, era5_2m_d, era5_u100, era5_v100, era5_precipitation, era5_sp = np.split(era5, 6, axis = -1)
-        except Exception as e:
-            print(f"Error processing data arrays (reshape/transpose/split): {e}")
-            cleanup_extracted_files()
-            return False
-        
-        openmeteo_2m_t = openmeteo_2m_t.squeeze(axis = -1)
-        openmeteo_2m_d = openmeteo_2m_d.squeeze(axis = -1)
-        openmeteo_u100 = openmeteo_u100.squeeze(axis = -1)
-        openmeteo_v100 = openmeteo_v100.squeeze(axis = -1)
-        openmeteo_precipitation = openmeteo_precipitation.squeeze(axis = -1)
-        openmeteo_sp = openmeteo_sp.squeeze(axis = -1)
-        
-        ecmwf_2m_t = ecmwf_2m_t.squeeze(axis = -1)
-        ecmwf_2m_d = ecmwf_2m_d.squeeze(axis = -1)
-        ecmwf_u100 = ecmwf_u100.squeeze(axis = -1)
-        ecmwf_v100 = ecmwf_v100.squeeze(axis = -1)
-        ecmwf_precipitation = ecmwf_precipitation.squeeze(axis = -1)
-        ecmwf_sp = ecmwf_sp.squeeze(axis = -1)
-        
-        noaa_2m_t = noaa_2m_t.squeeze(axis = -1)
-        noaa_2m_d = noaa_2m_d.squeeze(axis = -1)
-        noaa_u100 = noaa_u100.squeeze(axis = -1)
-        noaa_v100 = noaa_v100.squeeze(axis = -1)
-        noaa_precipitation = noaa_precipitation.squeeze(axis = -1)
-        noaa_sp = noaa_sp.squeeze(axis = -1)
-        
-        era5_2m_t = era5_2m_t.squeeze(axis = -1)
-        era5_2m_d = era5_2m_d.squeeze(axis = -1)
-        era5_u100 = era5_u100.squeeze(axis = -1)
-        era5_v100 = era5_v100.squeeze(axis = -1)
-        era5_precipitation = era5_precipitation.squeeze(axis = -1)
-        era5_sp = era5_sp.squeeze(axis = -1)
-        
-        # Define feature names and corresponding data arrays
-        features = [
-            ('temperature_2t', openmeteo_2m_t, ecmwf_2m_t, noaa_2m_t, era5_2m_t),
-            ('dewpoint_2d', openmeteo_2m_d, ecmwf_2m_d, noaa_2m_d, era5_2m_d),
-            ('u100', openmeteo_u100, ecmwf_u100, noaa_u100, era5_u100),
-            ('v100', openmeteo_v100, ecmwf_v100, noaa_v100, era5_v100),
-            ('precipitation', openmeteo_precipitation, ecmwf_precipitation, noaa_precipitation, era5_precipitation),
-            ('sp', openmeteo_sp, ecmwf_sp, noaa_sp, era5_sp)
-        ]
-        
-        # Create figure with 6 rows (features) and 3 columns (comparisons)
-        fig, axes = plt.subplots(6, 3, figsize=(18, 30))
+        era5 = era5.reshape(720, 1440, 5, 4, 6)
+        era5_1d, era5_2d, era5_3d, era5_4d, era5_5d = np.split(era5, 5, axis = 2)
+        era5_1d = era5_1d.squeeze(axis = 2)
+        era5_2d = era5_2d.squeeze(axis = 2)
+        era5_3d = era5_3d.squeeze(axis = 2)
+        era5_4d = era5_4d.squeeze(axis = 2)
+        era5_5d = era5_5d.squeeze(axis = 2)
+
+        best_match_1d_2t, best_match_1d_2d, best_match_1d_100u, best_match_1d_100v, best_match_1d_tp, best_match_1d_sp = np.split(best_match_1d, 6, axis = -1)
+        best_match_2d_2t, best_match_2d_2d, best_match_2d_100u, best_match_2d_100v, best_match_2d_tp, best_match_2d_sp = np.split(best_match_2d, 6, axis = -1)
+        best_match_3d_2t, best_match_3d_2d, best_match_3d_100u, best_match_3d_100v, best_match_3d_tp, best_match_3d_sp = np.split(best_match_3d, 6, axis = -1)
+        best_match_4d_2t, best_match_4d_2d, best_match_4d_100u, best_match_4d_100v, best_match_4d_tp, best_match_4d_sp = np.split(best_match_4d, 6, axis = -1)
+        best_match_5d_2t, best_match_5d_2d, best_match_5d_100u, best_match_5d_100v, best_match_5d_tp, best_match_5d_sp = np.split(best_match_5d, 6, axis = -1)
+
+        best_match_1d_2t = best_match_1d_2t.squeeze(axis = -1)
+        best_match_1d_2d = best_match_1d_2d.squeeze(axis = -1)
+        best_match_1d_100u = best_match_1d_100u.squeeze(axis = -1)
+        best_match_1d_100v = best_match_1d_100v.squeeze(axis = -1)
+        best_match_1d_tp = best_match_1d_tp.squeeze(axis = -1)
+        best_match_1d_sp = best_match_1d_sp.squeeze(axis = -1)
+
+        best_match_2d_2t = best_match_2d_2t.squeeze(axis = -1)
+        best_match_2d_2d = best_match_2d_2d.squeeze(axis = -1)
+        best_match_2d_100u = best_match_2d_100u.squeeze(axis = -1)
+        best_match_2d_100v = best_match_2d_100v.squeeze(axis = -1)
+        best_match_2d_tp = best_match_2d_tp.squeeze(axis = -1)
+        best_match_2d_sp = best_match_2d_sp.squeeze(axis = -1)
+
+        best_match_3d_2t = best_match_3d_2t.squeeze(axis = -1)
+        best_match_3d_2d = best_match_3d_2d.squeeze(axis = -1)
+        best_match_3d_100u = best_match_3d_100u.squeeze(axis = -1)
+        best_match_3d_100v = best_match_3d_100v.squeeze(axis = -1)
+        best_match_3d_tp = best_match_3d_tp.squeeze(axis = -1)
+        best_match_3d_sp = best_match_3d_sp.squeeze(axis = -1)
+
+        best_match_4d_2t = best_match_4d_2t.squeeze(axis = -1)
+        best_match_4d_2d = best_match_4d_2d.squeeze(axis = -1)
+        best_match_4d_100u = best_match_4d_100u.squeeze(axis = -1)
+        best_match_4d_100v = best_match_4d_100v.squeeze(axis = -1)
+        best_match_4d_tp = best_match_4d_tp.squeeze(axis = -1)
+        best_match_4d_sp = best_match_4d_sp.squeeze(axis = -1)
+
+        best_match_5d_2t = best_match_5d_2t.squeeze(axis = -1)
+        best_match_5d_2d = best_match_5d_2d.squeeze(axis = -1)
+        best_match_5d_100u = best_match_5d_100u.squeeze(axis = -1)
+        best_match_5d_100v = best_match_5d_100v.squeeze(axis = -1)
+        best_match_5d_tp = best_match_5d_tp.squeeze(axis = -1)
+        best_match_5d_sp = best_match_5d_sp.squeeze(axis = -1)
+
+        ecmwf_ifs_1d_2t, ecmwf_ifs_1d_2d, ecmwf_ifs_1d_100u, ecmwf_ifs_1d_100v, ecmwf_ifs_1d_tp, ecmwf_ifs_1d_sp = np.split(ecmwf_ifs_1d, 6, axis = -1)
+        ecmwf_ifs_2d_2t, ecmwf_ifs_2d_2d, ecmwf_ifs_2d_100u, ecmwf_ifs_2d_100v, ecmwf_ifs_2d_tp, ecmwf_ifs_2d_sp = np.split(ecmwf_ifs_2d, 6, axis = -1)
+        ecmwf_ifs_3d_2t, ecmwf_ifs_3d_2d, ecmwf_ifs_3d_100u, ecmwf_ifs_3d_100v, ecmwf_ifs_3d_tp, ecmwf_ifs_3d_sp = np.split(ecmwf_ifs_3d, 6, axis = -1)
+        ecmwf_ifs_4d_2t, ecmwf_ifs_4d_2d, ecmwf_ifs_4d_100u, ecmwf_ifs_4d_100v, ecmwf_ifs_4d_tp, ecmwf_ifs_4d_sp = np.split(ecmwf_ifs_4d, 6, axis = -1)
+        ecmwf_ifs_5d_2t, ecmwf_ifs_5d_2d, ecmwf_ifs_5d_100u, ecmwf_ifs_5d_100v, ecmwf_ifs_5d_tp, ecmwf_ifs_5d_sp = np.split(ecmwf_ifs_5d, 6, axis = -1)
+
+        ecmwf_ifs_1d_2t = ecmwf_ifs_1d_2t.squeeze(axis = -1)
+        ecmwf_ifs_1d_2d = ecmwf_ifs_1d_2d.squeeze(axis = -1)
+        ecmwf_ifs_1d_100u = ecmwf_ifs_1d_100u.squeeze(axis = -1)
+        ecmwf_ifs_1d_100v = ecmwf_ifs_1d_100v.squeeze(axis = -1)
+        ecmwf_ifs_1d_tp = ecmwf_ifs_1d_tp.squeeze(axis = -1)
+        ecmwf_ifs_1d_sp = ecmwf_ifs_1d_sp.squeeze(axis = -1)
+
+        ecmwf_ifs_2d_2t = ecmwf_ifs_2d_2t.squeeze(axis = -1)
+        ecmwf_ifs_2d_2d = ecmwf_ifs_2d_2d.squeeze(axis = -1)
+        ecmwf_ifs_2d_100u = ecmwf_ifs_2d_100u.squeeze(axis = -1)
+        ecmwf_ifs_2d_100v = ecmwf_ifs_2d_100v.squeeze(axis = -1)
+        ecmwf_ifs_2d_tp = ecmwf_ifs_2d_tp.squeeze(axis = -1)
+        ecmwf_ifs_2d_sp = ecmwf_ifs_2d_sp.squeeze(axis = -1)
+
+        ecmwf_ifs_3d_2t = ecmwf_ifs_3d_2t.squeeze(axis = -1)
+        ecmwf_ifs_3d_2d = ecmwf_ifs_3d_2d.squeeze(axis = -1)
+        ecmwf_ifs_3d_100u = ecmwf_ifs_3d_100u.squeeze(axis = -1)
+        ecmwf_ifs_3d_100v = ecmwf_ifs_3d_100v.squeeze(axis = -1)
+        ecmwf_ifs_3d_tp = ecmwf_ifs_3d_tp.squeeze(axis = -1)
+        ecmwf_ifs_3d_sp = ecmwf_ifs_3d_sp.squeeze(axis = -1)
+
+        ecmwf_ifs_4d_2t = ecmwf_ifs_4d_2t.squeeze(axis = -1)
+        ecmwf_ifs_4d_2d = ecmwf_ifs_4d_2d.squeeze(axis = -1)
+        ecmwf_ifs_4d_100u = ecmwf_ifs_4d_100u.squeeze(axis = -1)
+        ecmwf_ifs_4d_100v = ecmwf_ifs_4d_100v.squeeze(axis = -1)
+        ecmwf_ifs_4d_tp = ecmwf_ifs_4d_tp.squeeze(axis = -1)
+        ecmwf_ifs_4d_sp = ecmwf_ifs_4d_sp.squeeze(axis = -1)
+
+        ecmwf_ifs_5d_2t = ecmwf_ifs_5d_2t.squeeze(axis = -1)
+        ecmwf_ifs_5d_2d = ecmwf_ifs_5d_2d.squeeze(axis = -1)
+        ecmwf_ifs_5d_100u = ecmwf_ifs_5d_100u.squeeze(axis = -1)
+        ecmwf_ifs_5d_100v = ecmwf_ifs_5d_100v.squeeze(axis = -1)
+        ecmwf_ifs_5d_tp = ecmwf_ifs_5d_tp.squeeze(axis = -1)
+        ecmwf_ifs_5d_sp = ecmwf_ifs_5d_sp.squeeze(axis = -1)
+
+        gfs_global_1d_2t, gfs_global_1d_2d, gfs_global_1d_100u, gfs_global_1d_100v, gfs_global_1d_tp, gfs_global_1d_sp = np.split(gfs_global_1d, 6, axis = -1)
+        gfs_global_2d_2t, gfs_global_2d_2d, gfs_global_2d_100u, gfs_global_2d_100v, gfs_global_2d_tp, gfs_global_2d_sp = np.split(gfs_global_2d, 6, axis = -1)
+        gfs_global_3d_2t, gfs_global_3d_2d, gfs_global_3d_100u, gfs_global_3d_100v, gfs_global_3d_tp, gfs_global_3d_sp = np.split(gfs_global_3d, 6, axis = -1)
+        gfs_global_4d_2t, gfs_global_4d_2d, gfs_global_4d_100u, gfs_global_4d_100v, gfs_global_4d_tp, gfs_global_4d_sp = np.split(gfs_global_4d, 6, axis = -1)
+        gfs_global_5d_2t, gfs_global_5d_2d, gfs_global_5d_100u, gfs_global_5d_100v, gfs_global_5d_tp, gfs_global_5d_sp = np.split(gfs_global_5d, 6, axis = -1)
+
+        gfs_global_1d_2t = gfs_global_1d_2t.squeeze(axis = -1)
+        gfs_global_1d_2d = gfs_global_1d_2d.squeeze(axis = -1)
+        gfs_global_1d_100u = gfs_global_1d_100u.squeeze(axis = -1)
+        gfs_global_1d_100v = gfs_global_1d_100v.squeeze(axis = -1)
+        gfs_global_1d_tp = gfs_global_1d_tp.squeeze(axis = -1)
+        gfs_global_1d_sp = gfs_global_1d_sp.squeeze(axis = -1)
+
+        gfs_global_2d_2t = gfs_global_2d_2t.squeeze(axis = -1)
+        gfs_global_2d_2d = gfs_global_2d_2d.squeeze(axis = -1)
+        gfs_global_2d_100u = gfs_global_2d_100u.squeeze(axis = -1)
+        gfs_global_2d_100v = gfs_global_2d_100v.squeeze(axis = -1)
+        gfs_global_2d_tp = gfs_global_2d_tp.squeeze(axis = -1)
+        gfs_global_2d_sp = gfs_global_2d_sp.squeeze(axis = -1)
+
+        gfs_global_3d_2t = gfs_global_3d_2t.squeeze(axis = -1)
+        gfs_global_3d_2d = gfs_global_3d_2d.squeeze(axis = -1)
+        gfs_global_3d_100u = gfs_global_3d_100u.squeeze(axis = -1)
+        gfs_global_3d_100v = gfs_global_3d_100v.squeeze(axis = -1)
+        gfs_global_3d_tp = gfs_global_3d_tp.squeeze(axis = -1)
+        gfs_global_3d_sp = gfs_global_3d_sp.squeeze(axis = -1)
+
+        gfs_global_4d_2t = gfs_global_4d_2t.squeeze(axis = -1)
+        gfs_global_4d_2d = gfs_global_4d_2d.squeeze(axis = -1)
+        gfs_global_4d_100u = gfs_global_4d_100u.squeeze(axis = -1)
+        gfs_global_4d_100v = gfs_global_4d_100v.squeeze(axis = -1)
+        gfs_global_4d_tp = gfs_global_4d_tp.squeeze(axis = -1)
+        gfs_global_4d_sp = gfs_global_4d_sp.squeeze(axis = -1)
+
+        gfs_global_5d_2t = gfs_global_5d_2t.squeeze(axis = -1)
+        gfs_global_5d_2d = gfs_global_5d_2d.squeeze(axis = -1)
+        gfs_global_5d_100u = gfs_global_5d_100u.squeeze(axis = -1)
+        gfs_global_5d_100v = gfs_global_5d_100v.squeeze(axis = -1)
+        gfs_global_5d_tp = gfs_global_5d_tp.squeeze(axis = -1)
+        gfs_global_5d_sp = gfs_global_5d_sp.squeeze(axis = -1)
+
+        graphcast_1d_2t, graphcast_1d_2d, graphcast_1d_100u, graphcast_1d_100v, graphcast_1d_tp, graphcast_1d_sp = np.split(graphcast_1d, 6, axis = -1)
+        graphcast_2d_2t, graphcast_2d_2d, graphcast_2d_100u, graphcast_2d_100v, graphcast_2d_tp, graphcast_2d_sp = np.split(graphcast_2d, 6, axis = -1)
+        graphcast_3d_2t, graphcast_3d_2d, graphcast_3d_100u, graphcast_3d_100v, graphcast_3d_tp, graphcast_3d_sp = np.split(graphcast_3d, 6, axis = -1)
+        graphcast_4d_2t, graphcast_4d_2d, graphcast_4d_100u, graphcast_4d_100v, graphcast_4d_tp, graphcast_4d_sp = np.split(graphcast_4d, 6, axis = -1)
+        graphcast_5d_2t, graphcast_5d_2d, graphcast_5d_100u, graphcast_5d_100v, graphcast_5d_tp, graphcast_5d_sp = np.split(graphcast_5d, 6, axis = -1)
+
+        graphcast_1d_2t = graphcast_1d_2t.squeeze(axis = -1)
+        graphcast_1d_2d = graphcast_1d_2d.squeeze(axis = -1)
+        graphcast_1d_100u = graphcast_1d_100u.squeeze(axis = -1)
+        graphcast_1d_100v = graphcast_1d_100v.squeeze(axis = -1)
+        graphcast_1d_tp = graphcast_1d_tp.squeeze(axis = -1)
+        graphcast_1d_sp = graphcast_1d_sp.squeeze(axis = -1)
+
+        graphcast_2d_2t = graphcast_2d_2t.squeeze(axis = -1)
+        graphcast_2d_2d = graphcast_2d_2d.squeeze(axis = -1)
+        graphcast_2d_100u = graphcast_2d_100u.squeeze(axis = -1)
+        graphcast_2d_100v = graphcast_2d_100v.squeeze(axis = -1)
+        graphcast_2d_tp = graphcast_2d_tp.squeeze(axis = -1)
+        graphcast_2d_sp = graphcast_2d_sp.squeeze(axis = -1)
+
+        graphcast_3d_2t = graphcast_3d_2t.squeeze(axis = -1)
+        graphcast_3d_2d = graphcast_3d_2d.squeeze(axis = -1)
+        graphcast_3d_100u = graphcast_3d_100u.squeeze(axis = -1)
+        graphcast_3d_100v = graphcast_3d_100v.squeeze(axis = -1)
+        graphcast_3d_tp = graphcast_3d_tp.squeeze(axis = -1)
+        graphcast_3d_sp = graphcast_3d_sp.squeeze(axis = -1)
+
+        graphcast_4d_2t = graphcast_4d_2t.squeeze(axis = -1)
+        graphcast_4d_2d = graphcast_4d_2d.squeeze(axis = -1)
+        graphcast_4d_100u = graphcast_4d_100u.squeeze(axis = -1)
+        graphcast_4d_100v = graphcast_4d_100v.squeeze(axis = -1)
+        graphcast_4d_tp = graphcast_4d_tp.squeeze(axis = -1)
+        graphcast_4d_sp = graphcast_4d_sp.squeeze(axis = -1)
+
+        graphcast_5d_2t = graphcast_5d_2t.squeeze(axis = -1)
+        graphcast_5d_2d = graphcast_5d_2d.squeeze(axis = -1)
+        graphcast_5d_100u = graphcast_5d_100u.squeeze(axis = -1)
+        graphcast_5d_100v = graphcast_5d_100v.squeeze(axis = -1)
+        graphcast_5d_tp = graphcast_5d_tp.squeeze(axis = -1)
+        graphcast_5d_sp = graphcast_5d_sp.squeeze(axis = -1)
+
+        aifs_1d_2t, aifs_1d_2d, aifs_1d_100u, aifs_1d_100v, aifs_1d_tp, aifs_1d_sp = np.split(aifs_1d, 6, axis = -1)
+        aifs_2d_2t, aifs_2d_2d, aifs_2d_100u, aifs_2d_100v, aifs_2d_tp, aifs_2d_sp = np.split(aifs_2d, 6, axis = -1)
+        aifs_3d_2t, aifs_3d_2d, aifs_3d_100u, aifs_3d_100v, aifs_3d_tp, aifs_3d_sp = np.split(aifs_3d, 6, axis = -1)
+        aifs_4d_2t, aifs_4d_2d, aifs_4d_100u, aifs_4d_100v, aifs_4d_tp, aifs_4d_sp = np.split(aifs_4d, 6, axis = -1)
+        aifs_5d_2t, aifs_5d_2d, aifs_5d_100u, aifs_5d_100v, aifs_5d_tp, aifs_5d_sp = np.split(aifs_5d, 6, axis = -1)
+
+        aifs_1d_2t = aifs_1d_2t.squeeze(axis = -1)
+        aifs_1d_2d = aifs_1d_2d.squeeze(axis = -1)
+        aifs_1d_100u = aifs_1d_100u.squeeze(axis = -1)
+        aifs_1d_100v = aifs_1d_100v.squeeze(axis = -1)
+        aifs_1d_tp = aifs_1d_tp.squeeze(axis = -1)
+        aifs_1d_sp = aifs_1d_sp.squeeze(axis = -1)
+
+        aifs_2d_2t = aifs_2d_2t.squeeze(axis = -1)
+        aifs_2d_2d = aifs_2d_2d.squeeze(axis = -1)
+        aifs_2d_100u = aifs_2d_100u.squeeze(axis = -1)
+        aifs_2d_100v = aifs_2d_100v.squeeze(axis = -1)
+        aifs_2d_tp = aifs_2d_tp.squeeze(axis = -1)
+        aifs_2d_sp = aifs_2d_sp.squeeze(axis = -1)
+
+        aifs_3d_2t = aifs_3d_2t.squeeze(axis = -1)
+        aifs_3d_2d = aifs_3d_2d.squeeze(axis = -1)
+        aifs_3d_100u = aifs_3d_100u.squeeze(axis = -1)
+        aifs_3d_100v = aifs_3d_100v.squeeze(axis = -1)
+        aifs_3d_tp = aifs_3d_tp.squeeze(axis = -1)
+        aifs_3d_sp = aifs_3d_sp.squeeze(axis = -1)
+
+        aifs_4d_2t = aifs_4d_2t.squeeze(axis = -1)
+        aifs_4d_2d = aifs_4d_2d.squeeze(axis = -1)
+        aifs_4d_100u = aifs_4d_100u.squeeze(axis = -1)
+        aifs_4d_100v = aifs_4d_100v.squeeze(axis = -1)
+        aifs_4d_tp = aifs_4d_tp.squeeze(axis = -1)
+        aifs_4d_sp = aifs_4d_sp.squeeze(axis = -1)
+
+        aifs_5d_2t = aifs_5d_2t.squeeze(axis = -1)
+        aifs_5d_2d = aifs_5d_2d.squeeze(axis = -1)
+        aifs_5d_100u = aifs_5d_100u.squeeze(axis = -1)
+        aifs_5d_100v = aifs_5d_100v.squeeze(axis = -1)
+        aifs_5d_tp = aifs_5d_tp.squeeze(axis = -1)
+        aifs_5d_sp = aifs_5d_sp.squeeze(axis = -1)
+
+        era5_1d_2t, era5_1d_2d, era5_1d_100u, era5_1d_100v, era5_1d_tp, era5_1d_sp = np.split(era5_1d, 6, axis = -1)
+        era5_2d_2t, era5_2d_2d, era5_2d_100u, era5_2d_100v, era5_2d_tp, era5_2d_sp = np.split(era5_2d, 6, axis = -1)
+        era5_3d_2t, era5_3d_2d, era5_3d_100u, era5_3d_100v, era5_3d_tp, era5_3d_sp = np.split(era5_3d, 6, axis = -1)
+        era5_4d_2t, era5_4d_2d, era5_4d_100u, era5_4d_100v, era5_4d_tp, era5_4d_sp = np.split(era5_4d, 6, axis = -1)
+        era5_5d_2t, era5_5d_2d, era5_5d_100u, era5_5d_100v, era5_5d_tp, era5_5d_sp = np.split(era5_5d, 6, axis = -1)
+
+        era5_1d_2t = era5_1d_2t.squeeze(axis = -1)
+        era5_1d_2d = era5_1d_2d.squeeze(axis = -1)
+        era5_1d_100u = era5_1d_100u.squeeze(axis = -1)
+        era5_1d_100v = era5_1d_100v.squeeze(axis = -1)
+        era5_1d_tp = era5_1d_tp.squeeze(axis = -1)
+        era5_1d_sp = era5_1d_sp.squeeze(axis = -1)
+
+        era5_2d_2t = era5_2d_2t.squeeze(axis = -1)
+        era5_2d_2d = era5_2d_2d.squeeze(axis = -1)
+        era5_2d_100u = era5_2d_100u.squeeze(axis = -1)
+        era5_2d_100v = era5_2d_100v.squeeze(axis = -1)
+        era5_2d_tp = era5_2d_tp.squeeze(axis = -1)
+        era5_2d_sp = era5_2d_sp.squeeze(axis = -1)
+
+        era5_3d_2t = era5_3d_2t.squeeze(axis = -1)
+        era5_3d_2d = era5_3d_2d.squeeze(axis = -1)
+        era5_3d_100u = era5_3d_100u.squeeze(axis = -1)
+        era5_3d_100v = era5_3d_100v.squeeze(axis = -1)
+        era5_3d_tp = era5_3d_tp.squeeze(axis = -1)
+        era5_3d_sp = era5_3d_sp.squeeze(axis = -1)
+
+        era5_4d_2t = era5_4d_2t.squeeze(axis = -1)
+        era5_4d_2d = era5_4d_2d.squeeze(axis = -1)
+        era5_4d_100u = era5_4d_100u.squeeze(axis = -1)
+        era5_4d_100v = era5_4d_100v.squeeze(axis = -1)
+        era5_4d_tp = era5_4d_tp.squeeze(axis = -1)
+        era5_4d_sp = era5_4d_sp.squeeze(axis = -1)
+
+        era5_5d_2t = era5_5d_2t.squeeze(axis = -1)
+        era5_5d_2d = era5_5d_2d.squeeze(axis = -1)
+        era5_5d_100u = era5_5d_100u.squeeze(axis = -1)
+        era5_5d_100v = era5_5d_100v.squeeze(axis = -1)
+        era5_5d_tp = era5_5d_tp.squeeze(axis = -1)
+        era5_5d_sp = era5_5d_sp.squeeze(axis = -1)
+
+        # Group features by day and create one PNG per day
+        # Days: 1d, 2d, 3d, 4d, 5d
+        days_data = {
+            '1d': {
+                'best_match': [best_match_1d_2t, best_match_1d_2d, best_match_1d_100u, best_match_1d_100v, best_match_1d_tp, best_match_1d_sp],
+                'ecmwf_ifs': [ecmwf_ifs_1d_2t, ecmwf_ifs_1d_2d, ecmwf_ifs_1d_100u, ecmwf_ifs_1d_100v, ecmwf_ifs_1d_tp, ecmwf_ifs_1d_sp],
+                'gfs_global': [gfs_global_1d_2t, gfs_global_1d_2d, gfs_global_1d_100u, gfs_global_1d_100v, gfs_global_1d_tp, gfs_global_1d_sp],
+                'graphcast': [graphcast_1d_2t, graphcast_1d_2d, graphcast_1d_100u, graphcast_1d_100v, graphcast_1d_tp, graphcast_1d_sp],
+                'aifs': [aifs_1d_2t, aifs_1d_2d, aifs_1d_100u, aifs_1d_100v, aifs_1d_tp, aifs_1d_sp],
+                'era5': [era5_1d_2t, era5_1d_2d, era5_1d_100u, era5_1d_100v, era5_1d_tp, era5_1d_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '2d': {
+                'best_match': [best_match_2d_2t, best_match_2d_2d, best_match_2d_100u, best_match_2d_100v, best_match_2d_tp, best_match_2d_sp],
+                'ecmwf_ifs': [ecmwf_ifs_2d_2t, ecmwf_ifs_2d_2d, ecmwf_ifs_2d_100u, ecmwf_ifs_2d_100v, ecmwf_ifs_2d_tp, ecmwf_ifs_2d_sp],
+                'gfs_global': [gfs_global_2d_2t, gfs_global_2d_2d, gfs_global_2d_100u, gfs_global_2d_100v, gfs_global_2d_tp, gfs_global_2d_sp],
+                'graphcast': [graphcast_2d_2t, graphcast_2d_2d, graphcast_2d_100u, graphcast_2d_100v, graphcast_2d_tp, graphcast_2d_sp],
+                'aifs': [aifs_2d_2t, aifs_2d_2d, aifs_2d_100u, aifs_2d_100v, aifs_2d_tp, aifs_2d_sp],
+                'era5': [era5_2d_2t, era5_2d_2d, era5_2d_100u, era5_2d_100v, era5_2d_tp, era5_2d_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '3d': {
+                'best_match': [best_match_3d_2t, best_match_3d_2d, best_match_3d_100u, best_match_3d_100v, best_match_3d_tp, best_match_3d_sp],
+                'ecmwf_ifs': [ecmwf_ifs_3d_2t, ecmwf_ifs_3d_2d, ecmwf_ifs_3d_100u, ecmwf_ifs_3d_100v, ecmwf_ifs_3d_tp, ecmwf_ifs_3d_sp],
+                'gfs_global': [gfs_global_3d_2t, gfs_global_3d_2d, gfs_global_3d_100u, gfs_global_3d_100v, gfs_global_3d_tp, gfs_global_3d_sp],
+                'graphcast': [graphcast_3d_2t, graphcast_3d_2d, graphcast_3d_100u, graphcast_3d_100v, graphcast_3d_tp, graphcast_3d_sp],
+                'aifs': [aifs_3d_2t, aifs_3d_2d, aifs_3d_100u, aifs_3d_100v, aifs_3d_tp, aifs_3d_sp],
+                'era5': [era5_3d_2t, era5_3d_2d, era5_3d_100u, era5_3d_100v, era5_3d_tp, era5_3d_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '4d': {
+                'best_match': [best_match_4d_2t, best_match_4d_2d, best_match_4d_100u, best_match_4d_100v, best_match_4d_tp, best_match_4d_sp],
+                'ecmwf_ifs': [ecmwf_ifs_4d_2t, ecmwf_ifs_4d_2d, ecmwf_ifs_4d_100u, ecmwf_ifs_4d_100v, ecmwf_ifs_4d_tp, ecmwf_ifs_4d_sp],
+                'gfs_global': [gfs_global_4d_2t, gfs_global_4d_2d, gfs_global_4d_100u, gfs_global_4d_100v, gfs_global_4d_tp, gfs_global_4d_sp],
+                'graphcast': [graphcast_4d_2t, graphcast_4d_2d, graphcast_4d_100u, graphcast_4d_100v, graphcast_4d_tp, graphcast_4d_sp],
+                'aifs': [aifs_4d_2t, aifs_4d_2d, aifs_4d_100u, aifs_4d_100v, aifs_4d_tp, aifs_4d_sp],
+                'era5': [era5_4d_2t, era5_4d_2d, era5_4d_100u, era5_4d_100v, era5_4d_tp, era5_4d_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '5d': {
+                'best_match': [best_match_5d_2t, best_match_5d_2d, best_match_5d_100u, best_match_5d_100v, best_match_5d_tp, best_match_5d_sp],
+                'ecmwf_ifs': [ecmwf_ifs_5d_2t, ecmwf_ifs_5d_2d, ecmwf_ifs_5d_100u, ecmwf_ifs_5d_100v, ecmwf_ifs_5d_tp, ecmwf_ifs_5d_sp],
+                'gfs_global': [gfs_global_5d_2t, gfs_global_5d_2d, gfs_global_5d_100u, gfs_global_5d_100v, gfs_global_5d_tp, gfs_global_5d_sp],
+                'graphcast': [graphcast_5d_2t, graphcast_5d_2d, graphcast_5d_100u, graphcast_5d_100v, graphcast_5d_tp, graphcast_5d_sp],
+                'aifs': [aifs_5d_2t, aifs_5d_2d, aifs_5d_100u, aifs_5d_100v, aifs_5d_tp, aifs_5d_sp],
+                'era5': [era5_5d_2t, era5_5d_2d, era5_5d_100u, era5_5d_100v, era5_5d_tp, era5_5d_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            }
+        }
         
         # Use diverging colormap for better contrast
         cmap = 'RdBu_r'  # or 'coolwarm', 'seismic', 'bwr'
         
-        # Process each feature
+        # Process each day separately
         try:
-            for row_idx, (feature_name, om_data, ecmwf_data, noaa_data, era5_data) in enumerate(features):
-                # Calculate RMSE for each model
-                rmse_openmeteo = np.flip(np.sqrt(np.mean((om_data - era5_data) ** 2, axis=2)), axis=0)
-                rmse_ecmwf = np.flip(np.sqrt(np.mean((ecmwf_data - era5_data) ** 2, axis=2)), axis=0)
-                rmse_noaa = np.flip(np.sqrt(np.mean((noaa_data - era5_data) ** 2, axis=2)), axis=0)
+            for day in ['1d', '2d', '3d', '4d', '5d']:
+                day_data = days_data[day]
                 
-                # Calculate differences relative to ECMWF
-                data1 = rmse_openmeteo - rmse_ecmwf
-                data3 = rmse_noaa - rmse_ecmwf
+                # Check if PNG already exists for this day
+                output_path = os.path.join(rar_output_dir, f'{rar_basename}_{day}.png')
+                if os.path.exists(output_path):
+                    print(f"PNG file already exists: {output_path}, skipping...")
+                    continue
                 
-                # Find global min/max for symmetric color scaling
-                vmax = max(np.abs(data1).max(), np.abs(data3).max())
-                vmin = -vmax
+                # Create figure with 6 rows (features) and 5 columns (models)
+                fig, axes = plt.subplots(6, 5, figsize=(18, 30))
                 
-                # Plot with symmetric color scaling
-                im0 = axes[row_idx, 0].imshow(data1, cmap=cmap, vmin=vmin, vmax=vmax)
-                axes[row_idx, 0].set_title(f'{feature_name}\nOpenMeteo - ECMWF\n(relative to ERA5)')
-                axes[row_idx, 0].axis('off')
+                # Process each feature for this day
+                for row_idx in range(6):
+                    best_match_data = day_data['best_match'][row_idx]
+                    ecmwf_ifs_data = day_data['ecmwf_ifs'][row_idx]
+                    gfs_global_data = day_data['gfs_global'][row_idx]
+                    graphcast_data = day_data['graphcast'][row_idx]
+                    aifs_data = day_data['aifs'][row_idx]
+                    era5_data = day_data['era5'][row_idx]
+                    feature_name = day_data['feature_names'][row_idx]
+                    
+                    # Calculate RMSE for each model
+                    rmse_best_match = np.flip(np.sqrt(np.mean((best_match_data - era5_data) ** 2, axis=2)), axis=0)
+                    rmse_ecmwf_ifs = np.flip(np.sqrt(np.mean((ecmwf_ifs_data - era5_data) ** 2, axis=2)), axis=0)
+                    rmse_gfs_global = np.flip(np.sqrt(np.mean((gfs_global_data - era5_data) ** 2, axis=2)), axis=0)
+                    rmse_graphcast = np.flip(np.sqrt(np.mean((graphcast_data - era5_data) ** 2, axis=2)), axis=0)
+                    rmse_aifs = np.flip(np.sqrt(np.mean((aifs_data - era5_data) ** 2, axis=2)), axis=0)
+                    
+                    # Calculate differences relative to ECMWF
+                    data1 = rmse_best_match - rmse_ecmwf_ifs
+                    data3 = rmse_gfs_global - rmse_ecmwf_ifs
+                    data4 = rmse_graphcast - rmse_ecmwf_ifs
+                    data5 = rmse_aifs - rmse_ecmwf_ifs
+                    
+                    # Find global min/max for symmetric color scaling
+                    vmax = max(np.abs(data1).max(), np.abs(data3).max(), np.abs(data4).max(), np.abs(data5).max())
+                    vmin = -vmax
+                    
+                    # Plot with symmetric color scaling
+                    im0 = axes[row_idx, 0].imshow(data1, cmap=cmap, vmin=vmin, vmax=vmax)
+                    axes[row_idx, 0].set_title(f'{feature_name} ({day})\nBest Match - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 0].axis('off')
+                    
+                    # Second plot shows absolute ECMWF RMSE
+                    im1 = axes[row_idx, 1].imshow(rmse_ecmwf_ifs, cmap='viridis')
+                    axes[row_idx, 1].set_title(f'{feature_name} ({day})\nECMWF RMSE\n(absolute values)')
+                    axes[row_idx, 1].axis('off')
+                    
+                    im2 = axes[row_idx, 2].imshow(data3, cmap=cmap, vmin=vmin, vmax=vmax)
+                    axes[row_idx, 2].set_title(f'{feature_name} ({day})\nGFS Global - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 2].axis('off')
+                    
+                    im3 = axes[row_idx, 3].imshow(data4, cmap=cmap, vmin=vmin, vmax=vmax)
+                    axes[row_idx, 3].set_title(f'{feature_name} ({day})\nGraphcast - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 3].axis('off')
+                    
+                    im4 = axes[row_idx, 4].imshow(data5, cmap=cmap, vmin=vmin, vmax=vmax)
+                    axes[row_idx, 4].set_title(f'{feature_name} ({day})\nAIFS - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 4].axis('off')
+
+                    # Add colorbars
+                    fig.colorbar(im0, ax=axes[row_idx, 0], fraction=0.046, pad=0.04)
+                    fig.colorbar(im1, ax=axes[row_idx, 1], fraction=0.046, pad=0.04)
+                    fig.colorbar(im2, ax=axes[row_idx, 2], fraction=0.046, pad=0.04)
+                    fig.colorbar(im3, ax=axes[row_idx, 3], fraction=0.046, pad=0.04)
+                    fig.colorbar(im4, ax=axes[row_idx, 4], fraction=0.046, pad=0.04)
                 
-                # Second plot shows absolute ECMWF RMSE
-                im1 = axes[row_idx, 1].imshow(rmse_ecmwf, cmap='viridis')
-                axes[row_idx, 1].set_title(f'{feature_name}\nECMWF RMSE\n(absolute values)')
-                axes[row_idx, 1].axis('off')
+                plt.tight_layout()
                 
-                im2 = axes[row_idx, 2].imshow(data3, cmap=cmap, vmin=vmin, vmax=vmax)
-                axes[row_idx, 2].set_title(f'{feature_name}\nNOAA - ECMWF\n(relative to ERA5)')
-                axes[row_idx, 2].axis('off')
-                
-                # Add colorbars
-                fig.colorbar(im0, ax=axes[row_idx, 0], fraction=0.046, pad=0.04)
-                fig.colorbar(im1, ax=axes[row_idx, 1], fraction=0.046, pad=0.04)
-                fig.colorbar(im2, ax=axes[row_idx, 2], fraction=0.046, pad=0.04)
+                # Save the PNG file for this day
+                try:
+                    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+                    print(f"Saved heatmap to: {output_path}")
+                except Exception as e:
+                    print(f"Error saving PNG file {output_path}: {e}")
+                    cleanup_extracted_files()
+                    return False
+                finally:
+                    # Close the figure to free memory
+                    if fig is not None:
+                        try:
+                            plt.close(fig)
+                        except:
+                            pass
+                    fig = None
+        
         except Exception as e:
             print(f"Error during heatmap generation: {e}")
             cleanup_extracted_files()
             return False
-
-        plt.tight_layout()
-
-        # Save the PNG file (output_path was already determined at the start)
-        try:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
-            print(f"Saved heatmap to: {output_path}")
-        except Exception as e:
-            print(f"Error saving PNG file: {e}")
-            cleanup_extracted_files()
-            return False
-        finally:
-            # Close the figure to free memory
-            if fig is not None:
-                try:
-                    plt.close(fig)
-                except:
-                    pass
-            fig = None
 
         # Clean up: delete the extracted directory after successful processing
         cleanup_extracted_files()
