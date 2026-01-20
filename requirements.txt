@@ -1,6 +1,7 @@
 # Required dependencies
 numpy>=1.20.0
 matplotlib>=3.3.0
+h5py>=3.0.0
 
 # Optional dependencies (for RAR file extraction)
 # If rarfile is not installed, the script will use WinRAR (Windows) or unrar (Linux/Mac) as fallback

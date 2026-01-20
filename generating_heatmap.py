@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
+import h5py
 import os
 import subprocess
 import sys
@@ -8,8 +8,8 @@ import shutil
 import glob
 import argparse
 
-def find_pickle_file(directory, filename):
-    """Recursively search for a pickle file in the directory."""
+def find_h5_file(directory, filename):
+    """Recursively search for an HDF5 file in the directory."""
     for root, dirs, files in os.walk(directory):
         if filename in files:
             return os.path.join(root, filename)
@@ -191,8 +191,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
             return False
         
         # Check if required files exist
-        api_x_path = find_pickle_file(extracted_path, 'api_x.pkl') if os.path.exists(extracted_path) else None
-        y_path = find_pickle_file(extracted_path, 'y.pkl') if os.path.exists(extracted_path) else None
+        api_x_path = find_h5_file(extracted_path, 'api_x.h5') if os.path.exists(extracted_path) else None
+        y_path = find_h5_file(extracted_path, 'y.h5') if os.path.exists(extracted_path) else None
         
         # Extract if directory doesn't exist or required files are missing
         if not api_x_path or not y_path:
@@ -202,22 +202,48 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 return False
             
             # Find the files after extraction
-            api_x_path = find_pickle_file(extracted_path, 'api_x.pkl')
-            y_path = find_pickle_file(extracted_path, 'y.pkl')
+            api_x_path = find_h5_file(extracted_path, 'api_x.h5')
+            y_path = find_h5_file(extracted_path, 'y.h5')
             
             if not api_x_path or not y_path:
-                print(f"Error: Could not find required pickle files in {extracted_path}")
+                print(f"Error: Could not find required HDF5 files in {extracted_path}")
                 print("Skipping this RAR file.")
                 cleanup_extracted_files()
                 return False
 
-        # Load data from pickle files
+        # Load data from HDF5 files
         try:
-            with open(api_x_path, 'rb') as f:
-                data_3 = pickle.load(f)
-            data_3 = np.array(data_3)
+            # Check if file exists and is readable
+            if not os.path.exists(api_x_path):
+                raise FileNotFoundError(f"HDF5 file not found: {api_x_path}")
+            
+            # Check file size (HDF5 files should be at least a few bytes)
+            file_size = os.path.getsize(api_x_path)
+            if file_size == 0:
+                raise ValueError(f"HDF5 file is empty: {api_x_path}")
+            
+            with h5py.File(api_x_path, 'r') as f:
+                # Try common dataset names, or use the first available dataset
+                if 'data' in f:
+                    data_3 = np.array(f['data'])
+                elif 'dataset' in f:
+                    data_3 = np.array(f['dataset'])
+                else:
+                    # Use the first dataset found
+                    keys = list(f.keys())
+                    if keys:
+                        data_3 = np.array(f[keys[0]])
+                    else:
+                        raise ValueError("No datasets found in HDF5 file")
+        except (OSError, IOError) as e:
+            print(f"Error reading HDF5 file {api_x_path}: {e}")
+            print("The file may be corrupted, truncated, or incomplete.")
+            print("Please verify the RAR file extraction was successful.")
+            cleanup_extracted_files()
+            return False
         except Exception as e:
             print(f"Error loading {api_x_path}: {e}")
+            print("Please verify the HDF5 file is valid and not corrupted.")
             cleanup_extracted_files()
             return False
         
@@ -334,11 +360,37 @@ def process_rar_file(rar_path, data_dir, result_dir):
         aifs_20h = aifs[:,:,19,:]
 
         try:
-            with open(y_path, 'rb') as f:
-                era5 = pickle.load(f)
-            era5 = np.array(era5)
+            # Check if file exists and is readable
+            if not os.path.exists(y_path):
+                raise FileNotFoundError(f"HDF5 file not found: {y_path}")
+            
+            # Check file size (HDF5 files should be at least a few bytes)
+            file_size = os.path.getsize(y_path)
+            if file_size == 0:
+                raise ValueError(f"HDF5 file is empty: {y_path}")
+            
+            with h5py.File(y_path, 'r') as f:
+                # Try common dataset names, or use the first available dataset
+                if 'data' in f:
+                    era5 = np.array(f['data'])
+                elif 'dataset' in f:
+                    era5 = np.array(f['dataset'])
+                else:
+                    # Use the first dataset found
+                    keys = list(f.keys())
+                    if keys:
+                        era5 = np.array(f[keys[0]])
+                    else:
+                        raise ValueError("No datasets found in HDF5 file")
+        except (OSError, IOError) as e:
+            print(f"Error reading HDF5 file {y_path}: {e}")
+            print("The file may be corrupted, truncated, or incomplete.")
+            print("Please verify the RAR file extraction was successful.")
+            cleanup_extracted_files()
+            return False
         except Exception as e:
             print(f"Error loading {y_path}: {e}")
+            print("Please verify the HDF5 file is valid and not corrupted.")
             cleanup_extracted_files()
             return False
         
@@ -1448,11 +1500,11 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     rmse_graphcast = np.flip(np.abs(graphcast_data - era5_data), axis=0)
                     rmse_aifs = np.flip(np.abs(aifs_data - era5_data), axis=0)
                     
-                    global_rmse_ecmwf_ifs = rmse_ecmwf_ifs.mean()
-                    global_rmse_best_match = rmse_best_match.mean() - global_rmse_ecmwf_ifs
-                    global_rmse_gfs_global = rmse_gfs_global.mean() - global_rmse_ecmwf_ifs
-                    global_rmse_graphcast = rmse_graphcast.mean() - global_rmse_ecmwf_ifs
-                    global_rmse_aifs = rmse_aifs.mean() - global_rmse_ecmwf_ifs
+                    global_rmse_ecmwf_ifs = np.sqrt(np.mean(rmse_ecmwf_ifs ** 2))
+                    global_rmse_best_match = np.sqrt(np.mean(rmse_best_match ** 2)) - global_rmse_ecmwf_ifs
+                    global_rmse_gfs_global = np.sqrt(np.mean(rmse_gfs_global ** 2)) - global_rmse_ecmwf_ifs
+                    global_rmse_graphcast = np.sqrt(np.mean(rmse_graphcast ** 2)) - global_rmse_ecmwf_ifs
+                    global_rmse_aifs = np.sqrt(np.mean(rmse_aifs ** 2)) - global_rmse_ecmwf_ifs
 
                     # Calculate differences relative to ECMWF
                     data1 = rmse_best_match - rmse_ecmwf_ifs
@@ -1508,6 +1560,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 
                 # Save the PNG file for this hour
                 try:
+                    # Ensure output directory exists
+                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
                     plt.savefig(output_path, dpi=300, bbox_inches='tight')
                     print(f"Saved heatmap to: {output_path}")
                 except Exception as e:
@@ -1571,6 +1625,9 @@ if __name__ == "__main__":
         result_dir = os.path.abspath(args.result)
     else:
         result_dir = os.path.join(script_dir, 'result')
+    
+    # Create result directory if it doesn't exist
+    os.makedirs(result_dir, exist_ok=True)
     
     # Check if data directory exists
     if not os.path.exists(data_dir):
