@@ -190,7 +190,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
             cleanup_extracted_files()
             return False
         
-        # Check if required files exist
+        # Check if required files exist (handle case where h5 files are in a subdirectory)
         api_x_path = find_h5_file(extracted_path, 'api_x.h5') if os.path.exists(extracted_path) else None
         y_path = find_h5_file(extracted_path, 'y.h5') if os.path.exists(extracted_path) else None
         
@@ -201,15 +201,30 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 cleanup_extracted_files()
                 return False
             
-            # Find the files after extraction
+            # Find the files after extraction (recursively search in subdirectories)
             api_x_path = find_h5_file(extracted_path, 'api_x.h5')
             y_path = find_h5_file(extracted_path, 'y.h5')
             
             if not api_x_path or not y_path:
+                # Print directory structure for debugging
                 print(f"Error: Could not find required HDF5 files in {extracted_path}")
+                print(f"Searching in extracted directory structure:")
+                if os.path.exists(extracted_path):
+                    for root, dirs, files in os.walk(extracted_path):
+                        level = root.replace(extracted_path, '').count(os.sep)
+                        indent = ' ' * 2 * level
+                        print(f"{indent}{os.path.basename(root)}/")
+                        subindent = ' ' * 2 * (level + 1)
+                        for file in files:
+                            if file.endswith('.h5'):
+                                print(f"{subindent}{file}")
                 print("Skipping this RAR file.")
                 cleanup_extracted_files()
                 return False
+            
+            # Print where files were found (helpful for debugging)
+            print(f"Found api_x.h5 at: {api_x_path}")
+            print(f"Found y.h5 at: {y_path}")
 
         # Load data from HDF5 files
         try:
@@ -235,6 +250,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                         data_3 = np.array(f[keys[0]])
                     else:
                         raise ValueError("No datasets found in HDF5 file")
+
         except (OSError, IOError) as e:
             print(f"Error reading HDF5 file {api_x_path}: {e}")
             print("The file may be corrupted, truncated, or incomplete.")
@@ -247,7 +263,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
             cleanup_extracted_files()
             return False
 
-        data_3[:,:,:,4,:] *= 1000
+        # data_3[:,:,:,4,:] *= 1000
         
         best_match, ecmwf_ifs, gfs_global, AIFS, CMA = np.split(data_3, 5, axis = -1)
         best_match = best_match.squeeze(axis = -1)
@@ -417,7 +433,50 @@ def process_rar_file(rar_path, data_dir, result_dir):
             cleanup_extracted_files()
             return False
         
+        # Find and load z.h5 into ens_aifs (same way as era5 from y.h5)
+        z_path = find_h5_file(extracted_path, 'z.h5')
+        ens_aifs = None
+        
+        if z_path:
+            try:
+                # Check if file exists and is readable
+                if not os.path.exists(z_path):
+                    raise FileNotFoundError(f"HDF5 file not found: {z_path}")
+                
+                # Check file size (HDF5 files should be at least a few bytes)
+                file_size = os.path.getsize(z_path)
+                if file_size == 0:
+                    raise ValueError(f"HDF5 file is empty: {z_path}")
+                
+                with h5py.File(z_path, 'r') as f:
+                    # Try common dataset names, or use the first available dataset
+                    if 'data' in f:
+                        ens_aifs = np.array(f['data'])
+                    elif 'dataset' in f:
+                        ens_aifs = np.array(f['dataset'])
+                    else:
+                        # Use the first dataset found
+                        keys = list(f.keys())
+                        if keys:
+                            ens_aifs = np.array(f[keys[0]])
+                        else:
+                            raise ValueError("No datasets found in HDF5 file")
+                
+                print(f"Successfully loaded ens_aifs data from: {z_path}")
+            except (OSError, IOError) as e:
+                print(f"Warning: Error reading HDF5 file {z_path}: {e}")
+                print("The file may be corrupted, truncated, or incomplete.")
+                print("Continuing without ens_aifs data.")
+                ens_aifs = None
+            except Exception as e:
+                print(f"Warning: Error loading {z_path}: {e}")
+                print("Continuing without ens_aifs data.")
+                ens_aifs = None
+        else:
+            print(f"Warning: z.h5 file not found in {extracted_path}")
+            print("Continuing without ens_aifs data.")
 
+        ens_aifs = ens_aifs.squeeze(axis = -1)
         era5_1h = era5[:,:,0,:]
         era5_2h = era5[:,:,1,:]
         era5_3h = era5[:,:,2,:]
@@ -442,6 +501,31 @@ def process_rar_file(rar_path, data_dir, result_dir):
         era5_22h = era5[:,:,21,:]
         era5_23h = era5[:,:,22,:]
         era5_24h = era5[:,:,23,:]
+
+        ens_aifs_1h = ens_aifs[:,:,0,:]
+        ens_aifs_2h = ens_aifs[:,:,1,:]
+        ens_aifs_3h = ens_aifs[:,:,2,:]
+        ens_aifs_4h = ens_aifs[:,:,3,:]
+        ens_aifs_5h = ens_aifs[:,:,4,:]
+        ens_aifs_6h = ens_aifs[:,:,5,:]
+        ens_aifs_7h = ens_aifs[:,:,6,:]
+        ens_aifs_8h = ens_aifs[:,:,7,:]
+        ens_aifs_9h = ens_aifs[:,:,8,:]
+        ens_aifs_10h = ens_aifs[:,:,9,:]
+        ens_aifs_11h = ens_aifs[:,:,10,:]
+        ens_aifs_12h = ens_aifs[:,:,11,:]
+        ens_aifs_13h = ens_aifs[:,:,12,:]
+        ens_aifs_14h = ens_aifs[:,:,13,:]
+        ens_aifs_15h = ens_aifs[:,:,14,:]
+        ens_aifs_16h = ens_aifs[:,:,15,:]
+        ens_aifs_17h = ens_aifs[:,:,16,:]
+        ens_aifs_18h = ens_aifs[:,:,17,:]
+        ens_aifs_19h = ens_aifs[:,:,18,:]
+        ens_aifs_20h = ens_aifs[:,:,19,:]
+        ens_aifs_21h = ens_aifs[:,:,20,:]
+        ens_aifs_22h = ens_aifs[:,:,21,:]
+        ens_aifs_23h = ens_aifs[:,:,22,:]
+        ens_aifs_24h = ens_aifs[:,:,23,:]
 
         best_match_1h_2t = best_match_1h[:, :, 0]
         best_match_1h_2d = best_match_1h[:, :, 1]
@@ -1472,7 +1556,178 @@ def process_rar_file(rar_path, data_dir, result_dir):
         era5_24h_sp = era5_24h[:, :, 5]
         
 
+        ens_aifs_1h_2t = ens_aifs_1h[:, :, 0]
+        ens_aifs_1h_2d = ens_aifs_1h[:, :, 1]
+        ens_aifs_1h_100u = ens_aifs_1h[:, :, 2]
+        ens_aifs_1h_100v = ens_aifs_1h[:, :, 3]
+        ens_aifs_1h_tp = ens_aifs_1h[:, :, 4]
+        ens_aifs_1h_sp = ens_aifs_1h[:, :, 5]
+        
+        ens_aifs_2h_2t = ens_aifs_2h[:, :, 0]
+        ens_aifs_2h_2d = ens_aifs_2h[:, :, 1]
+        ens_aifs_2h_100u = ens_aifs_2h[:, :, 2]
+        ens_aifs_2h_100v = ens_aifs_2h[:, :, 3]
+        ens_aifs_2h_tp = ens_aifs_2h[:, :, 4]
+        ens_aifs_2h_sp = ens_aifs_2h[:, :, 5]
+
+        ens_aifs_3h_2t = ens_aifs_3h[:, :, 0]
+        ens_aifs_3h_2d = ens_aifs_3h[:, :, 1]
+        ens_aifs_3h_100u = ens_aifs_3h[:, :, 2]
+        ens_aifs_3h_100v = ens_aifs_3h[:, :, 3]
+        ens_aifs_3h_tp = ens_aifs_3h[:, :, 4]
+        ens_aifs_3h_sp = ens_aifs_3h[:, :, 5]
+        
+        
+        ens_aifs_4h_2t = ens_aifs_4h[:, :, 0]
+        ens_aifs_4h_2d = ens_aifs_4h[:, :, 1]
+        ens_aifs_4h_100u = ens_aifs_4h[:, :, 2]
+        ens_aifs_4h_100v = ens_aifs_4h[:, :, 3]
+        ens_aifs_4h_tp = ens_aifs_4h[:, :, 4]
+        ens_aifs_4h_sp = ens_aifs_4h[:, :, 5]
+        
+        ens_aifs_5h_2t = ens_aifs_5h[:, :, 0]
+        ens_aifs_5h_2d = ens_aifs_5h[:, :, 1]
+        ens_aifs_5h_100u = ens_aifs_5h[:, :, 2]
+        ens_aifs_5h_100v = ens_aifs_5h[:, :, 3]
+        ens_aifs_5h_tp = ens_aifs_5h[:, :, 4]
+        ens_aifs_5h_sp = ens_aifs_5h[:, :, 5]
+        
+        ens_aifs_6h_2t = ens_aifs_6h[:, :, 0]
+        ens_aifs_6h_2d = ens_aifs_6h[:, :, 1]
+        ens_aifs_6h_100u = ens_aifs_6h[:, :, 2]
+        ens_aifs_6h_100v = ens_aifs_6h[:, :, 3]
+        ens_aifs_6h_tp = ens_aifs_6h[:, :, 4]
+        ens_aifs_6h_sp = ens_aifs_6h[:, :, 5]
+        
         # Group features by hour and create one PNG per hour
+        ens_aifs_7h_2t = ens_aifs_7h[:, :, 0]
+        ens_aifs_7h_2d = ens_aifs_7h[:, :, 1]
+        ens_aifs_7h_100u = ens_aifs_7h[:, :, 2]
+        ens_aifs_7h_100v = ens_aifs_7h[:, :, 3]
+        ens_aifs_7h_tp = ens_aifs_7h[:, :, 4]
+        ens_aifs_7h_sp = ens_aifs_7h[:, :, 5]
+        
+        ens_aifs_8h_2t = ens_aifs_8h[:, :, 0]
+        ens_aifs_8h_2d = ens_aifs_8h[:, :, 1]
+        ens_aifs_8h_100u = ens_aifs_8h[:, :, 2]
+        ens_aifs_8h_100v = ens_aifs_8h[:, :, 3]
+        ens_aifs_8h_tp = ens_aifs_8h[:, :, 4]
+        ens_aifs_8h_sp = ens_aifs_8h[:, :, 5]
+        
+        ens_aifs_9h_2t = ens_aifs_9h[:, :, 0]
+        ens_aifs_9h_2d = ens_aifs_9h[:, :, 1]
+        ens_aifs_9h_100u = ens_aifs_9h[:, :, 2]
+        ens_aifs_9h_100v = ens_aifs_9h[:, :, 3]
+        ens_aifs_9h_tp = ens_aifs_9h[:, :, 4]
+        ens_aifs_9h_sp = ens_aifs_9h[:, :, 5]
+        
+        ens_aifs_10h_2t = ens_aifs_10h[:, :, 0]
+        ens_aifs_10h_2d = ens_aifs_10h[:, :, 1]
+        ens_aifs_10h_100u = ens_aifs_10h[:, :, 2]
+        ens_aifs_10h_100v = ens_aifs_10h[:, :, 3]
+        ens_aifs_10h_tp = ens_aifs_10h[:, :, 4]
+        ens_aifs_10h_sp = ens_aifs_10h[:, :, 5]
+        
+        ens_aifs_11h_2t = ens_aifs_11h[:, :, 0]
+        ens_aifs_11h_2d = ens_aifs_11h[:, :, 1]
+        ens_aifs_11h_100u = ens_aifs_11h[:, :, 2]
+        ens_aifs_11h_100v = ens_aifs_11h[:, :, 3]
+        ens_aifs_11h_tp = ens_aifs_11h[:, :, 4]
+        ens_aifs_11h_sp = ens_aifs_11h[:, :, 5]
+        
+        ens_aifs_12h_2t = ens_aifs_12h[:, :, 0]
+        ens_aifs_12h_2d = ens_aifs_12h[:, :, 1]
+        ens_aifs_12h_100u = ens_aifs_12h[:, :, 2]
+        ens_aifs_12h_100v = ens_aifs_12h[:, :, 3]
+        ens_aifs_12h_tp = ens_aifs_12h[:, :, 4]
+        ens_aifs_12h_sp = ens_aifs_12h[:, :, 5]
+        
+        ens_aifs_13h_2t = ens_aifs_13h[:, :, 0]
+        ens_aifs_13h_2d = ens_aifs_13h[:, :, 1]
+        ens_aifs_13h_100u = ens_aifs_13h[:, :, 2]
+        ens_aifs_13h_100v = ens_aifs_13h[:, :, 3]
+        ens_aifs_13h_tp = ens_aifs_13h[:, :, 4]
+        ens_aifs_13h_sp = ens_aifs_13h[:, :, 5]
+        
+        ens_aifs_14h_2t = ens_aifs_14h[:, :, 0]
+        ens_aifs_14h_2d = ens_aifs_14h[:, :, 1]
+        ens_aifs_14h_100u = ens_aifs_14h[:, :, 2]
+        ens_aifs_14h_100v = ens_aifs_14h[:, :, 3]
+        ens_aifs_14h_tp = ens_aifs_14h[:, :, 4]
+        ens_aifs_14h_sp = ens_aifs_14h[:, :, 5]
+        
+        ens_aifs_15h_2t = ens_aifs_15h[:, :, 0]
+        ens_aifs_15h_2d = ens_aifs_15h[:, :, 1]
+        ens_aifs_15h_100u = ens_aifs_15h[:, :, 2]
+        ens_aifs_15h_100v = ens_aifs_15h[:, :, 3]
+        ens_aifs_15h_tp = ens_aifs_15h[:, :, 4]
+        ens_aifs_15h_sp = ens_aifs_15h[:, :, 5]
+        
+        ens_aifs_16h_2t = ens_aifs_16h[:, :, 0]
+        ens_aifs_16h_2d = ens_aifs_16h[:, :, 1]
+        ens_aifs_16h_100u = ens_aifs_16h[:, :, 2]
+        ens_aifs_16h_100v = ens_aifs_16h[:, :, 3]
+        ens_aifs_16h_tp = ens_aifs_16h[:, :, 4]
+        ens_aifs_16h_sp = ens_aifs_16h[:, :, 5]
+        
+        ens_aifs_17h_2t = ens_aifs_17h[:, :, 0]
+        ens_aifs_17h_2d = ens_aifs_17h[:, :, 1]
+        ens_aifs_17h_100u = ens_aifs_17h[:, :, 2]
+        ens_aifs_17h_100v = ens_aifs_17h[:, :, 3]
+        ens_aifs_17h_tp = ens_aifs_17h[:, :, 4]
+        ens_aifs_17h_sp = ens_aifs_17h[:, :, 5]
+        
+        ens_aifs_18h_2t = ens_aifs_18h[:, :, 0]
+        ens_aifs_18h_2d = ens_aifs_18h[:, :, 1]
+        ens_aifs_18h_100u = ens_aifs_18h[:, :, 2]
+        ens_aifs_18h_100v = ens_aifs_18h[:, :, 3]
+        ens_aifs_18h_tp = ens_aifs_18h[:, :, 4]
+        ens_aifs_18h_sp = ens_aifs_18h[:, :, 5]
+        
+        ens_aifs_19h_2t = ens_aifs_19h[:, :, 0]
+        ens_aifs_19h_2d = ens_aifs_19h[:, :, 1]
+        ens_aifs_19h_100u = ens_aifs_19h[:, :, 2]
+        ens_aifs_19h_100v = ens_aifs_19h[:, :, 3]
+        ens_aifs_19h_tp = ens_aifs_19h[:, :, 4]
+        ens_aifs_19h_sp = ens_aifs_19h[:, :, 5]
+        
+        ens_aifs_20h_2t = ens_aifs_20h[:, :, 0]
+        ens_aifs_20h_2d = ens_aifs_20h[:, :, 1]
+        ens_aifs_20h_100u = ens_aifs_20h[:, :, 2]
+        ens_aifs_20h_100v = ens_aifs_20h[:, :, 3]
+        ens_aifs_20h_tp = ens_aifs_20h[:, :, 4]
+        ens_aifs_20h_sp = ens_aifs_20h[:, :, 5]
+        
+        ens_aifs_21h_2t = ens_aifs_21h[:, :, 0]
+        ens_aifs_21h_2d = ens_aifs_21h[:, :, 1]
+        ens_aifs_21h_100u = ens_aifs_21h[:, :, 2]
+        ens_aifs_21h_100v = ens_aifs_21h[:, :, 3]
+        ens_aifs_21h_tp = ens_aifs_21h[:, :, 4]
+        ens_aifs_21h_sp = ens_aifs_21h[:, :, 5]
+        
+        ens_aifs_22h_2t = ens_aifs_22h[:, :, 0]
+        ens_aifs_22h_2d = ens_aifs_22h[:, :, 1]
+        ens_aifs_22h_100u = ens_aifs_22h[:, :, 2]
+        ens_aifs_22h_100v = ens_aifs_22h[:, :, 3]
+        ens_aifs_22h_tp = ens_aifs_22h[:, :, 4]
+        ens_aifs_22h_sp = ens_aifs_22h[:, :, 5]
+        
+        ens_aifs_23h_2t = ens_aifs_23h[:, :, 0]
+        ens_aifs_23h_2d = ens_aifs_23h[:, :, 1]
+        ens_aifs_23h_100u = ens_aifs_23h[:, :, 2]
+        ens_aifs_23h_100v = ens_aifs_23h[:, :, 3]
+        ens_aifs_23h_tp = ens_aifs_23h[:, :, 4]
+        ens_aifs_23h_sp = ens_aifs_23h[:, :, 5]
+        
+        ens_aifs_24h_2t = ens_aifs_24h[:, :, 0]
+        ens_aifs_24h_2d = ens_aifs_24h[:, :, 1]
+        ens_aifs_24h_100u = ens_aifs_24h[:, :, 2]
+        ens_aifs_24h_100v = ens_aifs_24h[:, :, 3]
+        ens_aifs_24h_tp = ens_aifs_24h[:, :, 4]
+        ens_aifs_24h_sp = ens_aifs_24h[:, :, 5]
+
+
+
         # Hours: 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h, 14h, 15h, 16h, 17h, 18h, 19h, 20h, 21h, 22h, 23h, 24h
         hours_data = {
             '1h': {
@@ -1482,6 +1737,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_1h_2t, AIFS_1h_2d, AIFS_1h_100u, AIFS_1h_100v, AIFS_1h_tp, AIFS_1h_sp],
                 'CMA': [CMA_1h_2t, CMA_1h_2d, CMA_1h_100u, CMA_1h_100v, CMA_1h_tp, CMA_1h_sp],
                 'era5': [era5_1h_2t, era5_1h_2d, era5_1h_100u, era5_1h_100v, era5_1h_tp, era5_1h_sp],
+                'ens_aifs': [ens_aifs_1h_2t, ens_aifs_1h_2d, ens_aifs_1h_100u, ens_aifs_1h_100v, ens_aifs_1h_tp, ens_aifs_1h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '2h': {
@@ -1491,6 +1747,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_2h_2t, AIFS_2h_2d, AIFS_2h_100u, AIFS_2h_100v, AIFS_2h_tp, AIFS_2h_sp],
                 'CMA': [CMA_2h_2t, CMA_2h_2d, CMA_2h_100u, CMA_2h_100v, CMA_2h_tp, CMA_2h_sp],
                 'era5': [era5_2h_2t, era5_2h_2d, era5_2h_100u, era5_2h_100v, era5_2h_tp, era5_2h_sp],
+                'ens_aifs': [ens_aifs_2h_2t, ens_aifs_2h_2d, ens_aifs_2h_100u, ens_aifs_2h_100v, ens_aifs_2h_tp, ens_aifs_2h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '3h': {
@@ -1500,6 +1757,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_3h_2t, AIFS_3h_2d, AIFS_3h_100u, AIFS_3h_100v, AIFS_3h_tp, AIFS_3h_sp],
                 'CMA': [CMA_3h_2t, CMA_3h_2d, CMA_3h_100u, CMA_3h_100v, CMA_3h_tp, CMA_3h_sp],
                 'era5': [era5_3h_2t, era5_3h_2d, era5_3h_100u, era5_3h_100v, era5_3h_tp, era5_3h_sp],
+                'ens_aifs': [ens_aifs_3h_2t, ens_aifs_3h_2d, ens_aifs_3h_100u, ens_aifs_3h_100v, ens_aifs_3h_tp, ens_aifs_3h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '4h': {
@@ -1509,6 +1767,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_4h_2t, AIFS_4h_2d, AIFS_4h_100u, AIFS_4h_100v, AIFS_4h_tp, AIFS_4h_sp],
                 'CMA': [CMA_4h_2t, CMA_4h_2d, CMA_4h_100u, CMA_4h_100v, CMA_4h_tp, CMA_4h_sp],
                 'era5': [era5_4h_2t, era5_4h_2d, era5_4h_100u, era5_4h_100v, era5_4h_tp, era5_4h_sp],
+                'ens_aifs': [ens_aifs_4h_2t, ens_aifs_4h_2d, ens_aifs_4h_100u, ens_aifs_4h_100v, ens_aifs_4h_tp, ens_aifs_4h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '5h': {
@@ -1518,6 +1777,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_5h_2t, AIFS_5h_2d, AIFS_5h_100u, AIFS_5h_100v, AIFS_5h_tp, AIFS_5h_sp],
                 'CMA': [CMA_5h_2t, CMA_5h_2d, CMA_5h_100u, CMA_5h_100v, CMA_5h_tp, CMA_5h_sp],
                 'era5': [era5_5h_2t, era5_5h_2d, era5_5h_100u, era5_5h_100v, era5_5h_tp, era5_5h_sp],
+                'ens_aifs': [ens_aifs_5h_2t, ens_aifs_5h_2d, ens_aifs_5h_100u, ens_aifs_5h_100v, ens_aifs_5h_tp, ens_aifs_5h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '6h': {
@@ -1527,6 +1787,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_6h_2t, AIFS_6h_2d, AIFS_6h_100u, AIFS_6h_100v, AIFS_6h_tp, AIFS_6h_sp],
                 'CMA': [CMA_6h_2t, CMA_6h_2d, CMA_6h_100u, CMA_6h_100v, CMA_6h_tp, CMA_6h_sp],
                 'era5': [era5_6h_2t, era5_6h_2d, era5_6h_100u, era5_6h_100v, era5_6h_tp, era5_6h_sp],
+                'ens_aifs': [ens_aifs_6h_2t, ens_aifs_6h_2d, ens_aifs_6h_100u, ens_aifs_6h_100v, ens_aifs_6h_tp, ens_aifs_6h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '7h': {
@@ -1536,6 +1797,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_7h_2t, AIFS_7h_2d, AIFS_7h_100u, AIFS_7h_100v, AIFS_7h_tp, AIFS_7h_sp],
                 'CMA': [CMA_7h_2t, CMA_7h_2d, CMA_7h_100u, CMA_7h_100v, CMA_7h_tp, CMA_7h_sp],
                 'era5': [era5_7h_2t, era5_7h_2d, era5_7h_100u, era5_7h_100v, era5_7h_tp, era5_7h_sp],
+                'ens_aifs': [ens_aifs_7h_2t, ens_aifs_7h_2d, ens_aifs_7h_100u, ens_aifs_7h_100v, ens_aifs_7h_tp, ens_aifs_7h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '8h': {
@@ -1545,6 +1807,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_8h_2t, AIFS_8h_2d, AIFS_8h_100u, AIFS_8h_100v, AIFS_8h_tp, AIFS_8h_sp],
                 'CMA': [CMA_8h_2t, CMA_8h_2d, CMA_8h_100u, CMA_8h_100v, CMA_8h_tp, CMA_8h_sp],
                 'era5': [era5_8h_2t, era5_8h_2d, era5_8h_100u, era5_8h_100v, era5_8h_tp, era5_8h_sp],
+                'ens_aifs': [ens_aifs_8h_2t, ens_aifs_8h_2d, ens_aifs_8h_100u, ens_aifs_8h_100v, ens_aifs_8h_tp, ens_aifs_8h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '9h': {
@@ -1554,6 +1817,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_9h_2t, AIFS_9h_2d, AIFS_9h_100u, AIFS_9h_100v, AIFS_9h_tp, AIFS_9h_sp],
                 'CMA': [CMA_9h_2t, CMA_9h_2d, CMA_9h_100u, CMA_9h_100v, CMA_9h_tp, CMA_9h_sp],
                 'era5': [era5_9h_2t, era5_9h_2d, era5_9h_100u, era5_9h_100v, era5_9h_tp, era5_9h_sp],
+                'ens_aifs': [ens_aifs_9h_2t, ens_aifs_9h_2d, ens_aifs_9h_100u, ens_aifs_9h_100v, ens_aifs_9h_tp, ens_aifs_9h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '10h': {
@@ -1563,6 +1827,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_10h_2t, AIFS_10h_2d, AIFS_10h_100u, AIFS_10h_100v, AIFS_10h_tp, AIFS_10h_sp],
                 'CMA': [CMA_10h_2t, CMA_10h_2d, CMA_10h_100u, CMA_10h_100v, CMA_10h_tp, CMA_10h_sp],
                 'era5': [era5_10h_2t, era5_10h_2d, era5_10h_100u, era5_10h_100v, era5_10h_tp, era5_10h_sp],
+                'ens_aifs': [ens_aifs_10h_2t, ens_aifs_10h_2d, ens_aifs_10h_100u, ens_aifs_10h_100v, ens_aifs_10h_tp, ens_aifs_10h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '11h': {
@@ -1572,6 +1837,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_11h_2t, AIFS_11h_2d, AIFS_11h_100u, AIFS_11h_100v, AIFS_11h_tp, AIFS_11h_sp],
                 'CMA': [CMA_11h_2t, CMA_11h_2d, CMA_11h_100u, CMA_11h_100v, CMA_11h_tp, CMA_11h_sp],
                 'era5': [era5_11h_2t, era5_11h_2d, era5_11h_100u, era5_11h_100v, era5_11h_tp, era5_11h_sp],
+                'ens_aifs': [ens_aifs_11h_2t, ens_aifs_11h_2d, ens_aifs_11h_100u, ens_aifs_11h_100v, ens_aifs_11h_tp, ens_aifs_11h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '12h': {
@@ -1581,6 +1847,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_12h_2t, AIFS_12h_2d, AIFS_12h_100u, AIFS_12h_100v, AIFS_12h_tp, AIFS_12h_sp],
                 'CMA': [CMA_12h_2t, CMA_12h_2d, CMA_12h_100u, CMA_12h_100v, CMA_12h_tp, CMA_12h_sp],
                 'era5': [era5_12h_2t, era5_12h_2d, era5_12h_100u, era5_12h_100v, era5_12h_tp, era5_12h_sp],
+                'ens_aifs': [ens_aifs_12h_2t, ens_aifs_12h_2d, ens_aifs_12h_100u, ens_aifs_12h_100v, ens_aifs_12h_tp, ens_aifs_12h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '13h': {
@@ -1590,6 +1857,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_13h_2t, AIFS_13h_2d, AIFS_13h_100u, AIFS_13h_100v, AIFS_13h_tp, AIFS_13h_sp],
                 'CMA': [CMA_13h_2t, CMA_13h_2d, CMA_13h_100u, CMA_13h_100v, CMA_13h_tp, CMA_13h_sp],
                 'era5': [era5_13h_2t, era5_13h_2d, era5_13h_100u, era5_13h_100v, era5_13h_tp, era5_13h_sp],
+                'ens_aifs': [ens_aifs_13h_2t, ens_aifs_13h_2d, ens_aifs_13h_100u, ens_aifs_13h_100v, ens_aifs_13h_tp, ens_aifs_13h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '14h': {
@@ -1599,6 +1867,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_14h_2t, AIFS_14h_2d, AIFS_14h_100u, AIFS_14h_100v, AIFS_14h_tp, AIFS_14h_sp],
                 'CMA': [CMA_14h_2t, CMA_14h_2d, CMA_14h_100u, CMA_14h_100v, CMA_14h_tp, CMA_14h_sp],
                 'era5': [era5_14h_2t, era5_14h_2d, era5_14h_100u, era5_14h_100v, era5_14h_tp, era5_14h_sp],
+                'ens_aifs': [ens_aifs_14h_2t, ens_aifs_14h_2d, ens_aifs_14h_100u, ens_aifs_14h_100v, ens_aifs_14h_tp, ens_aifs_14h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '15h': {
@@ -1608,6 +1877,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_15h_2t, AIFS_15h_2d, AIFS_15h_100u, AIFS_15h_100v, AIFS_15h_tp, AIFS_15h_sp],
                 'CMA': [CMA_15h_2t, CMA_15h_2d, CMA_15h_100u, CMA_15h_100v, CMA_15h_tp, CMA_15h_sp],
                 'era5': [era5_15h_2t, era5_15h_2d, era5_15h_100u, era5_15h_100v, era5_15h_tp, era5_15h_sp],
+                'ens_aifs': [ens_aifs_15h_2t, ens_aifs_15h_2d, ens_aifs_15h_100u, ens_aifs_15h_100v, ens_aifs_15h_tp, ens_aifs_15h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '16h': {
@@ -1617,6 +1887,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_16h_2t, AIFS_16h_2d, AIFS_16h_100u, AIFS_16h_100v, AIFS_16h_tp, AIFS_16h_sp],
                 'CMA': [CMA_16h_2t, CMA_16h_2d, CMA_16h_100u, CMA_16h_100v, CMA_16h_tp, CMA_16h_sp],
                 'era5': [era5_16h_2t, era5_16h_2d, era5_16h_100u, era5_16h_100v, era5_16h_tp, era5_16h_sp],
+                'ens_aifs': [ens_aifs_16h_2t, ens_aifs_16h_2d, ens_aifs_16h_100u, ens_aifs_16h_100v, ens_aifs_16h_tp, ens_aifs_16h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '17h': {
@@ -1626,6 +1897,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_17h_2t, AIFS_17h_2d, AIFS_17h_100u, AIFS_17h_100v, AIFS_17h_tp, AIFS_17h_sp],
                 'CMA': [CMA_17h_2t, CMA_17h_2d, CMA_17h_100u, CMA_17h_100v, CMA_17h_tp, CMA_17h_sp],
                 'era5': [era5_17h_2t, era5_17h_2d, era5_17h_100u, era5_17h_100v, era5_17h_tp, era5_17h_sp],
+                'ens_aifs': [ens_aifs_17h_2t, ens_aifs_17h_2d, ens_aifs_17h_100u, ens_aifs_17h_100v, ens_aifs_17h_tp, ens_aifs_17h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '18h': {
@@ -1635,6 +1907,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_18h_2t, AIFS_18h_2d, AIFS_18h_100u, AIFS_18h_100v, AIFS_18h_tp, AIFS_18h_sp],
                 'CMA': [CMA_18h_2t, CMA_18h_2d, CMA_18h_100u, CMA_18h_100v, CMA_18h_tp, CMA_18h_sp],
                 'era5': [era5_18h_2t, era5_18h_2d, era5_18h_100u, era5_18h_100v, era5_18h_tp, era5_18h_sp],
+                'ens_aifs': [ens_aifs_18h_2t, ens_aifs_18h_2d, ens_aifs_18h_100u, ens_aifs_18h_100v, ens_aifs_18h_tp, ens_aifs_18h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '19h': {
@@ -1644,6 +1917,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_19h_2t, AIFS_19h_2d, AIFS_19h_100u, AIFS_19h_100v, AIFS_19h_tp, AIFS_19h_sp],
                 'CMA': [CMA_19h_2t, CMA_19h_2d, CMA_19h_100u, CMA_19h_100v, CMA_19h_tp, CMA_19h_sp],
                 'era5': [era5_19h_2t, era5_19h_2d, era5_19h_100u, era5_19h_100v, era5_19h_tp, era5_19h_sp],
+                'ens_aifs': [ens_aifs_19h_2t, ens_aifs_19h_2d, ens_aifs_19h_100u, ens_aifs_19h_100v, ens_aifs_19h_tp, ens_aifs_19h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '20h': {
@@ -1653,6 +1927,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_20h_2t, AIFS_20h_2d, AIFS_20h_100u, AIFS_20h_100v, AIFS_20h_tp, AIFS_20h_sp],
                 'CMA': [CMA_20h_2t, CMA_20h_2d, CMA_20h_100u, CMA_20h_100v, CMA_20h_tp, CMA_20h_sp],
                 'era5': [era5_20h_2t, era5_20h_2d, era5_20h_100u, era5_20h_100v, era5_20h_tp, era5_20h_sp],
+                'ens_aifs': [ens_aifs_20h_2t, ens_aifs_20h_2d, ens_aifs_20h_100u, ens_aifs_20h_100v, ens_aifs_20h_tp, ens_aifs_20h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '21h': {
@@ -1662,6 +1937,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_21h_2t, AIFS_21h_2d, AIFS_21h_100u, AIFS_21h_100v, AIFS_21h_tp, AIFS_21h_sp],
                 'CMA': [CMA_21h_2t, CMA_21h_2d, CMA_21h_100u, CMA_21h_100v, CMA_21h_tp, CMA_21h_sp],
                 'era5': [era5_21h_2t, era5_21h_2d, era5_21h_100u, era5_21h_100v, era5_21h_tp, era5_21h_sp],
+                'ens_aifs': [ens_aifs_21h_2t, ens_aifs_21h_2d, ens_aifs_21h_100u, ens_aifs_21h_100v, ens_aifs_21h_tp, ens_aifs_21h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '22h': {
@@ -1671,6 +1947,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_22h_2t, AIFS_22h_2d, AIFS_22h_100u, AIFS_22h_100v, AIFS_22h_tp, AIFS_22h_sp],
                 'CMA': [CMA_22h_2t, CMA_22h_2d, CMA_22h_100u, CMA_22h_100v, CMA_22h_tp, CMA_22h_sp],
                 'era5': [era5_22h_2t, era5_22h_2d, era5_22h_100u, era5_22h_100v, era5_22h_tp, era5_22h_sp],
+                'ens_aifs': [ens_aifs_22h_2t, ens_aifs_22h_2d, ens_aifs_22h_100u, ens_aifs_22h_100v, ens_aifs_22h_tp, ens_aifs_22h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '23h': {
@@ -1680,6 +1957,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_23h_2t, AIFS_23h_2d, AIFS_23h_100u, AIFS_23h_100v, AIFS_23h_tp, AIFS_23h_sp],
                 'CMA': [CMA_23h_2t, CMA_23h_2d, CMA_23h_100u, CMA_23h_100v, CMA_23h_tp, CMA_23h_sp],
                 'era5': [era5_23h_2t, era5_23h_2d, era5_23h_100u, era5_23h_100v, era5_23h_tp, era5_23h_sp],
+                'ens_aifs': [ens_aifs_23h_2t, ens_aifs_23h_2d, ens_aifs_23h_100u, ens_aifs_23h_100v, ens_aifs_23h_tp, ens_aifs_23h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
             '24h': {
@@ -1689,6 +1967,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'AIFS': [AIFS_24h_2t, AIFS_24h_2d, AIFS_24h_100u, AIFS_24h_100v, AIFS_24h_tp, AIFS_24h_sp],
                 'CMA': [CMA_24h_2t, CMA_24h_2d, CMA_24h_100u, CMA_24h_100v, CMA_24h_tp, CMA_24h_sp],
                 'era5': [era5_24h_2t, era5_24h_2d, era5_24h_100u, era5_24h_100v, era5_24h_tp, era5_24h_sp],
+                'ens_aifs': [ens_aifs_24h_2t, ens_aifs_24h_2d, ens_aifs_24h_100u, ens_aifs_24h_100v, ens_aifs_24h_tp, ens_aifs_24h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             }
         }
@@ -1709,7 +1988,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     continue
                 
                 # Create figure with 6 rows (features) and 5 columns (models)
-                fig, axes = plt.subplots(6, 5, figsize=(18, 30))
+                fig, axes = plt.subplots(6, 6, figsize=(18, 36))
                 
                 # Process each feature for this hour
                 for row_idx in range(6):
@@ -1719,6 +1998,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     AIFS_data = hour_data['AIFS'][row_idx]
                     CMA_data = hour_data['CMA'][row_idx]
                     era5_data = hour_data['era5'][row_idx]
+                    ens_aifs_data = hour_data['ens_aifs'][row_idx]
                     feature_name = hour_data['feature_names'][row_idx]
                     
                     # Calculate RMSE for each model
@@ -1727,21 +2007,24 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     rmse_gfs_global = np.flip(np.abs(gfs_global_data - era5_data), axis=0)
                     rmse_AIFS = np.flip(np.abs(AIFS_data - era5_data), axis=0)
                     rmse_CMA = np.flip(np.abs(CMA_data - era5_data), axis=0)
+                    rmse_ens_aifs = np.flip(np.abs(ens_aifs_data - era5_data), axis=0)
                     
                     global_rmse_ecmwf_ifs = np.sqrt(np.mean(rmse_ecmwf_ifs ** 2))
                     global_rmse_best_match = np.sqrt(np.mean(rmse_best_match ** 2)) - global_rmse_ecmwf_ifs
                     global_rmse_gfs_global = np.sqrt(np.mean(rmse_gfs_global ** 2)) - global_rmse_ecmwf_ifs
                     global_rmse_AIFS = np.sqrt(np.mean(rmse_AIFS ** 2)) - global_rmse_ecmwf_ifs
                     global_rmse_CMA = np.sqrt(np.mean(rmse_CMA ** 2)) - global_rmse_ecmwf_ifs
-
+                    global_rmse_ens_aifs = np.sqrt(np.mean(rmse_ens_aifs ** 2)) - global_rmse_ecmwf_ifs
+                    
                     # Calculate differences relative to ECMWF
                     data1 = rmse_best_match - rmse_ecmwf_ifs
                     data3 = rmse_gfs_global - rmse_ecmwf_ifs
                     data4 = rmse_AIFS - rmse_ecmwf_ifs
                     data5 = rmse_CMA - rmse_ecmwf_ifs
+                    data6 = rmse_ens_aifs - rmse_ecmwf_ifs
                     
                     # Find global min/max for symmetric color scaling
-                    vmax = max(np.abs(data1).max(), np.abs(data3).max(), np.abs(data4).max(), np.abs(data5).max())
+                    vmax = max(np.abs(data1).max(), np.abs(data3).max(), np.abs(data4).max(), np.abs(data5).max(), np.abs(data6).max())
                     vmin = -vmax
                     
                     # Plot with symmetric color scaling
@@ -1775,6 +2058,11 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     axes[row_idx, 4].axis('off')
                     axes[row_idx, 4].text(0.5, -0.08, f'Global RMSE: {global_rmse_CMA:.4f}', 
                                           transform=axes[row_idx, 4].transAxes, ha='center', va='top', fontsize=9)
+                    im5 = axes[row_idx, 5].imshow(data6, cmap=cmap, vmin=vmin, vmax=vmax)
+                    axes[row_idx, 5].set_title(f'{feature_name} ({hour})\nENS AIFS - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 5].axis('off')
+                    axes[row_idx, 5].text(0.5, -0.08, f'Global RMSE: {global_rmse_ens_aifs:.4f}', 
+                                          transform=axes[row_idx, 5].transAxes, ha='center', va='top', fontsize=9)
 
                     # Add colorbars
                     fig.colorbar(im0, ax=axes[row_idx, 0], fraction=0.046, pad=0.04)
@@ -1782,6 +2070,7 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     fig.colorbar(im2, ax=axes[row_idx, 2], fraction=0.046, pad=0.04)
                     fig.colorbar(im3, ax=axes[row_idx, 3], fraction=0.046, pad=0.04)
                     fig.colorbar(im4, ax=axes[row_idx, 4], fraction=0.046, pad=0.04)
+                    fig.colorbar(im5, ax=axes[row_idx, 5], fraction=0.046, pad=0.04)
                 
                 plt.tight_layout(rect=[0, 0.03, 1, 0.98])  # Leave space at bottom for global RMSE text
                 plt.subplots_adjust(bottom=0.05)  # Additional bottom margin for text
