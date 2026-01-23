@@ -246,13 +246,16 @@ def process_rar_file(rar_path, data_dir, result_dir):
             print("Please verify the HDF5 file is valid and not corrupted.")
             cleanup_extracted_files()
             return False
+
+        data_3[:,:,:,4,:] *= 1000
         
-        best_match, ecmwf_ifs, gfs_global, graphcast, aifs = np.split(data_3, 5, axis = -1)
+        best_match, ecmwf_ifs, gfs_global, AIFS, CMA = np.split(data_3, 5, axis = -1)
         best_match = best_match.squeeze(axis = -1)
         ecmwf_ifs = ecmwf_ifs.squeeze(axis = -1)
         gfs_global = gfs_global.squeeze(axis = -1)
-        graphcast = graphcast.squeeze(axis = -1)
-        aifs = aifs.squeeze(axis = -1)
+        AIFS = AIFS.squeeze(axis = -1)
+        CMA = CMA.squeeze(axis = -1)
+        
 
         best_match_1h = best_match[:,:,0,:]
         best_match_2h = best_match[:,:,1,:]
@@ -274,6 +277,10 @@ def process_rar_file(rar_path, data_dir, result_dir):
         best_match_18h = best_match[:,:,17,:]
         best_match_19h = best_match[:,:,18,:]
         best_match_20h = best_match[:,:,19,:]
+        best_match_21h = best_match[:,:,20,:]
+        best_match_22h = best_match[:,:,21,:]
+        best_match_23h = best_match[:,:,22,:]
+        best_match_24h = best_match[:,:,23,:]
 
         ecmwf_ifs_1h = ecmwf_ifs[:,:,0,:]
         ecmwf_ifs_2h = ecmwf_ifs[:,:,1,:]
@@ -295,6 +302,10 @@ def process_rar_file(rar_path, data_dir, result_dir):
         ecmwf_ifs_18h = ecmwf_ifs[:,:,17,:]
         ecmwf_ifs_19h = ecmwf_ifs[:,:,18,:]
         ecmwf_ifs_20h = ecmwf_ifs[:,:,19,:]
+        ecmwf_ifs_21h = ecmwf_ifs[:,:,20,:]
+        ecmwf_ifs_22h = ecmwf_ifs[:,:,21,:]
+        ecmwf_ifs_23h = ecmwf_ifs[:,:,22,:]
+        ecmwf_ifs_24h = ecmwf_ifs[:,:,23,:]
 
         gfs_global_1h = gfs_global[:,:,0,:]
         gfs_global_2h = gfs_global[:,:,1,:]
@@ -316,48 +327,60 @@ def process_rar_file(rar_path, data_dir, result_dir):
         gfs_global_18h = gfs_global[:,:,17,:]
         gfs_global_19h = gfs_global[:,:,18,:]
         gfs_global_20h = gfs_global[:,:,19,:]
+        gfs_global_21h = gfs_global[:,:,20,:]
+        gfs_global_22h = gfs_global[:,:,21,:]
+        gfs_global_23h = gfs_global[:,:,22,:]
+        gfs_global_24h = gfs_global[:,:,23,:]
 
-        graphcast_1h = graphcast[:,:,0,:]
-        graphcast_2h = graphcast[:,:,1,:]
-        graphcast_3h = graphcast[:,:,2,:]
-        graphcast_4h = graphcast[:,:,3,:]
-        graphcast_5h = graphcast[:,:,4,:]
-        graphcast_6h = graphcast[:,:,5,:]
-        graphcast_7h = graphcast[:,:,6,:]
-        graphcast_8h = graphcast[:,:,7,:]
-        graphcast_9h = graphcast[:,:,8,:]
-        graphcast_10h = graphcast[:,:,9,:]
-        graphcast_11h = graphcast[:,:,10,:]
-        graphcast_12h = graphcast[:,:,11,:]
-        graphcast_13h = graphcast[:,:,12,:]
-        graphcast_14h = graphcast[:,:,13,:]
-        graphcast_15h = graphcast[:,:,14,:]
-        graphcast_16h = graphcast[:,:,15,:]
-        graphcast_17h = graphcast[:,:,16,:]
-        graphcast_18h = graphcast[:,:,17,:]
-        graphcast_19h = graphcast[:,:,18,:]
-        graphcast_20h = graphcast[:,:,19,:]
+        AIFS_1h = AIFS[:,:,0,:]
+        AIFS_2h = AIFS[:,:,1,:]
+        AIFS_3h = AIFS[:,:,2,:]
+        AIFS_4h = AIFS[:,:,3,:]
+        AIFS_5h = AIFS[:,:,4,:]
+        AIFS_6h = AIFS[:,:,5,:]
+        AIFS_7h = AIFS[:,:,6,:]
+        AIFS_8h = AIFS[:,:,7,:]
+        AIFS_9h = AIFS[:,:,8,:]
+        AIFS_10h = AIFS[:,:,9,:]
+        AIFS_11h = AIFS[:,:,10,:]
+        AIFS_12h = AIFS[:,:,11,:]
+        AIFS_13h = AIFS[:,:,12,:]
+        AIFS_14h = AIFS[:,:,13,:]
+        AIFS_15h = AIFS[:,:,14,:]
+        AIFS_16h = AIFS[:,:,15,:]
+        AIFS_17h = AIFS[:,:,16,:]
+        AIFS_18h = AIFS[:,:,17,:]
+        AIFS_19h = AIFS[:,:,18,:]
+        AIFS_20h = AIFS[:,:,19,:]
+        AIFS_21h = AIFS[:,:,20,:]
+        AIFS_22h = AIFS[:,:,21,:]
+        AIFS_23h = AIFS[:,:,22,:]
+        AIFS_24h = AIFS[:,:,23,:]
 
-        aifs_1h = aifs[:,:,0,:]
-        aifs_2h = aifs[:,:,1,:]
-        aifs_3h = aifs[:,:,2,:]
-        aifs_4h = aifs[:,:,3,:]
-        aifs_5h = aifs[:,:,4,:]
-        aifs_6h = aifs[:,:,5,:]
-        aifs_7h = aifs[:,:,6,:]
-        aifs_8h = aifs[:,:,7,:]
-        aifs_9h = aifs[:,:,8,:]
-        aifs_10h = aifs[:,:,9,:]
-        aifs_11h = aifs[:,:,10,:]
-        aifs_12h = aifs[:,:,11,:]
-        aifs_13h = aifs[:,:,12,:]
-        aifs_14h = aifs[:,:,13,:]
-        aifs_15h = aifs[:,:,14,:]
-        aifs_16h = aifs[:,:,15,:]
-        aifs_17h = aifs[:,:,16,:]
-        aifs_18h = aifs[:,:,17,:]
-        aifs_19h = aifs[:,:,18,:]
-        aifs_20h = aifs[:,:,19,:]
+        CMA_1h = CMA[:,:,0,:]
+        CMA_2h = CMA[:,:,1,:]
+        CMA_3h = CMA[:,:,2,:]
+        CMA_4h = CMA[:,:,3,:]
+        CMA_5h = CMA[:,:,4,:]
+        CMA_6h = CMA[:,:,5,:]
+        CMA_7h = CMA[:,:,6,:]
+        CMA_8h = CMA[:,:,7,:]
+        CMA_9h = CMA[:,:,8,:]
+        CMA_10h = CMA[:,:,9,:]
+        CMA_11h = CMA[:,:,10,:]
+        CMA_12h = CMA[:,:,11,:]
+        CMA_13h = CMA[:,:,12,:]
+        CMA_14h = CMA[:,:,13,:]
+        CMA_15h = CMA[:,:,14,:]
+        CMA_16h = CMA[:,:,15,:]
+        CMA_17h = CMA[:,:,16,:]
+        CMA_18h = CMA[:,:,17,:]
+        CMA_19h = CMA[:,:,18,:]
+        CMA_20h = CMA[:,:,19,:]
+        CMA_21h = CMA[:,:,20,:]
+        CMA_22h = CMA[:,:,21,:]
+        CMA_23h = CMA[:,:,22,:]
+        CMA_24h = CMA[:,:,23,:]
 
         try:
             # Check if file exists and is readable
@@ -395,843 +418,982 @@ def process_rar_file(rar_path, data_dir, result_dir):
             return False
         
 
-        era5_1h = era5[:,:,19,:]
-        era5_2h = era5[:,:,19,:]
-        era5_3h = era5[:,:,19,:]
-        era5_4h = era5[:,:,19,:]
-        era5_5h = era5[:,:,19,:]
-        era5_6h = era5[:,:,19,:]
-        era5_7h = era5[:,:,19,:]
-        era5_8h = era5[:,:,19,:]
-        era5_9h = era5[:,:,19,:]
-        era5_10h = era5[:,:,19,:]
-        era5_11h = era5[:,:,19,:]
-        era5_12h = era5[:,:,19,:]
-        era5_13h = era5[:,:,19,:]
-        era5_14h = era5[:,:,19,:]
-        era5_15h = era5[:,:,19,:]
-        era5_16h = era5[:,:,19,:]
-        era5_17h = era5[:,:,19,:]
-        era5_18h = era5[:,:,19,:]
-        era5_19h = era5[:,:,19,:]
+        era5_1h = era5[:,:,0,:]
+        era5_2h = era5[:,:,1,:]
+        era5_3h = era5[:,:,2,:]
+        era5_4h = era5[:,:,3,:]
+        era5_5h = era5[:,:,4,:]
+        era5_6h = era5[:,:,5,:]
+        era5_7h = era5[:,:,6,:]
+        era5_8h = era5[:,:,7,:]
+        era5_9h = era5[:,:,8,:]
+        era5_10h = era5[:,:,9,:]
+        era5_11h = era5[:,:,10,:]
+        era5_12h = era5[:,:,11,:]
+        era5_13h = era5[:,:,12,:]
+        era5_14h = era5[:,:,13,:]
+        era5_15h = era5[:,:,14,:]
+        era5_16h = era5[:,:,15,:]
+        era5_17h = era5[:,:,16,:]
+        era5_18h = era5[:,:,17,:]
+        era5_19h = era5[:,:,18,:]
         era5_20h = era5[:,:,19,:]
+        era5_21h = era5[:,:,20,:]
+        era5_22h = era5[:,:,21,:]
+        era5_23h = era5[:,:,22,:]
+        era5_24h = era5[:,:,23,:]
 
         best_match_1h_2t = best_match_1h[:, :, 0]
         best_match_1h_2d = best_match_1h[:, :, 1]
-        best_match_1h_100u = best_match_1h[:, :, 2]/3.6
-        best_match_1h_100v = best_match_1h[:, :, 3]/3.6
+        best_match_1h_100u = best_match_1h[:, :, 2]
+        best_match_1h_100v = best_match_1h[:, :, 3]
         best_match_1h_tp = best_match_1h[:, :, 4]
         best_match_1h_sp = best_match_1h[:, :, 5]
 
         best_match_2h_2t = best_match_2h[:, :, 0]
         best_match_2h_2d = best_match_2h[:, :, 1]
-        best_match_2h_100u = best_match_2h[:, :, 2]/3.6
-        best_match_2h_100v = best_match_2h[:, :, 3]/3.6
+        best_match_2h_100u = best_match_2h[:, :, 2]
+        best_match_2h_100v = best_match_2h[:, :, 3]
         best_match_2h_tp = best_match_2h[:, :, 4]
         best_match_2h_sp = best_match_2h[:, :, 5]
 
 
         best_match_3h_2t = best_match_3h[:, :, 0]
         best_match_3h_2d = best_match_3h[:, :, 1]
-        best_match_3h_100u = best_match_3h[:, :, 2]/3.6
-        best_match_3h_100v = best_match_3h[:, :, 3]/3.6
+        best_match_3h_100u = best_match_3h[:, :, 2]
+        best_match_3h_100v = best_match_3h[:, :, 3]
         best_match_3h_tp = best_match_3h[:, :, 4]
         best_match_3h_sp = best_match_3h[:, :, 5]
 
         best_match_4h_2t = best_match_4h[:, :, 0]
         best_match_4h_2d = best_match_4h[:, :, 1]
-        best_match_4h_100u = best_match_4h[:, :, 2]/3.6
-        best_match_4h_100v = best_match_4h[:, :, 3]/3.6
+        best_match_4h_100u = best_match_4h[:, :, 2]
+        best_match_4h_100v = best_match_4h[:, :, 3]
         best_match_4h_tp = best_match_4h[:, :, 4]
         best_match_4h_sp = best_match_4h[:, :, 5]
 
         best_match_5h_2t = best_match_5h[:, :, 0]
         best_match_5h_2d = best_match_5h[:, :, 1]
-        best_match_5h_100u = best_match_5h[:, :, 2]/3.6
-        best_match_5h_100v = best_match_5h[:, :, 3]/3.6
+        best_match_5h_100u = best_match_5h[:, :, 2]
+        best_match_5h_100v = best_match_5h[:, :, 3]
         best_match_5h_tp = best_match_5h[:, :, 4]
         best_match_5h_sp = best_match_5h[:, :, 5]
 
         best_match_6h_2t = best_match_6h[:, :, 0]
         best_match_6h_2d = best_match_6h[:, :, 1]
-        best_match_6h_100u = best_match_6h[:, :, 2]/3.6
-        best_match_6h_100v = best_match_6h[:, :, 3]/3.6
+        best_match_6h_100u = best_match_6h[:, :, 2]
+        best_match_6h_100v = best_match_6h[:, :, 3]
         best_match_6h_tp = best_match_6h[:, :, 4]
         best_match_6h_sp = best_match_6h[:, :, 5]
 
         best_match_7h_2t = best_match_7h[:, :, 0]
         best_match_7h_2d = best_match_7h[:, :, 1]
-        best_match_7h_100u = best_match_7h[:, :, 2]/3.6
-        best_match_7h_100v = best_match_7h[:, :, 3]/3.6
+        best_match_7h_100u = best_match_7h[:, :, 2]
+        best_match_7h_100v = best_match_7h[:, :, 3]
         best_match_7h_tp = best_match_7h[:, :, 4]
         best_match_7h_sp = best_match_7h[:, :, 5]
 
         best_match_8h_2t = best_match_8h[:, :, 0]
         best_match_8h_2d = best_match_8h[:, :, 1]
-        best_match_8h_100u = best_match_8h[:, :, 2]/3.6
-        best_match_8h_100v = best_match_8h[:, :, 3]/3.6
+        best_match_8h_100u = best_match_8h[:, :, 2]
+        best_match_8h_100v = best_match_8h[:, :, 3]
         best_match_8h_tp = best_match_8h[:, :, 4]
         best_match_8h_sp = best_match_8h[:, :, 5]
 
         best_match_9h_2t = best_match_9h[:, :, 0]
         best_match_9h_2d = best_match_9h[:, :, 1]
-        best_match_9h_100u = best_match_9h[:, :, 2]/3.6
-        best_match_9h_100v = best_match_9h[:, :, 3]/3.6
+        best_match_9h_100u = best_match_9h[:, :, 2]
+        best_match_9h_100v = best_match_9h[:, :, 3]
         best_match_9h_tp = best_match_9h[:, :, 4]
         best_match_9h_sp = best_match_9h[:, :, 5]
 
         best_match_10h_2t = best_match_10h[:, :, 0]
         best_match_10h_2d = best_match_10h[:, :, 1]
-        best_match_10h_100u = best_match_10h[:, :, 2]/3.6
-        best_match_10h_100v = best_match_10h[:, :, 3]/3.6
+        best_match_10h_100u = best_match_10h[:, :, 2]
+        best_match_10h_100v = best_match_10h[:, :, 3]
         best_match_10h_tp = best_match_10h[:, :, 4]
         best_match_10h_sp = best_match_10h[:, :, 5]
         
         best_match_11h_2t = best_match_11h[:, :, 0]
         best_match_11h_2d = best_match_11h[:, :, 1]
-        best_match_11h_100u = best_match_11h[:, :, 2]/3.6
-        best_match_11h_100v = best_match_11h[:, :, 3]/3.6
+        best_match_11h_100u = best_match_11h[:, :, 2]
+        best_match_11h_100v = best_match_11h[:, :, 3]
         best_match_11h_tp = best_match_11h[:, :, 4]
         best_match_11h_sp = best_match_11h[:, :, 5]
         
         best_match_12h_2t = best_match_12h[:, :, 0]
         best_match_12h_2d = best_match_12h[:, :, 1]
-        best_match_12h_100u = best_match_12h[:, :, 2]/3.6
-        best_match_12h_100v = best_match_12h[:, :, 3]/3.6
+        best_match_12h_100u = best_match_12h[:, :, 2]
+        best_match_12h_100v = best_match_12h[:, :, 3]
         best_match_12h_tp = best_match_12h[:, :, 4]
         best_match_12h_sp = best_match_12h[:, :, 5]
         
         
         best_match_13h_2t = best_match_13h[:, :, 0]
         best_match_13h_2d = best_match_13h[:, :, 1]
-        best_match_13h_100u = best_match_13h[:, :, 2]/3.6
-        best_match_13h_100v = best_match_13h[:, :, 3]/3.6
+        best_match_13h_100u = best_match_13h[:, :, 2]
+        best_match_13h_100v = best_match_13h[:, :, 3]
         best_match_13h_tp = best_match_13h[:, :, 4]
         best_match_13h_sp = best_match_13h[:, :, 5]
         
 
         best_match_14h_2t = best_match_14h[:, :, 0]
         best_match_14h_2d = best_match_14h[:, :, 1]
-        best_match_14h_100u = best_match_14h[:, :, 2]/3.6
-        best_match_14h_100v = best_match_14h[:, :, 3]/3.6
+        best_match_14h_100u = best_match_14h[:, :, 2]
+        best_match_14h_100v = best_match_14h[:, :, 3]
         best_match_14h_tp = best_match_14h[:, :, 4]
         best_match_14h_sp = best_match_14h[:, :, 5]
         
         best_match_15h_2t = best_match_15h[:, :, 0]
         best_match_15h_2d = best_match_15h[:, :, 1]
-        best_match_15h_100u = best_match_15h[:, :, 2]/3.6
-        best_match_15h_100v = best_match_15h[:, :, 3]/3.6
+        best_match_15h_100u = best_match_15h[:, :, 2]
+        best_match_15h_100v = best_match_15h[:, :, 3]
         best_match_15h_tp = best_match_15h[:, :, 4]
         best_match_15h_sp = best_match_15h[:, :, 5]
         
 
         best_match_16h_2t = best_match_16h[:, :, 0]
         best_match_16h_2d = best_match_16h[:, :, 1]
-        best_match_16h_100u = best_match_16h[:, :, 2]/3.6
-        best_match_16h_100v = best_match_16h[:, :, 3]/3.6
+        best_match_16h_100u = best_match_16h[:, :, 2]
+        best_match_16h_100v = best_match_16h[:, :, 3]
         best_match_16h_tp = best_match_16h[:, :, 4]
         best_match_16h_sp = best_match_16h[:, :, 5]
         
 
         best_match_17h_2t = best_match_17h[:, :, 0]
         best_match_17h_2d = best_match_17h[:, :, 1]
-        best_match_17h_100u = best_match_17h[:, :, 2]/3.6
-        best_match_17h_100v = best_match_17h[:, :, 3]/3.6
+        best_match_17h_100u = best_match_17h[:, :, 2]
+        best_match_17h_100v = best_match_17h[:, :, 3]
         best_match_17h_tp = best_match_17h[:, :, 4]
         best_match_17h_sp = best_match_17h[:, :, 5]
         
 
         best_match_18h_2t = best_match_18h[:, :, 0]
         best_match_18h_2d = best_match_18h[:, :, 1]
-        best_match_18h_100u = best_match_18h[:, :, 2]/3.6
-        best_match_18h_100v = best_match_18h[:, :, 3]/3.6
+        best_match_18h_100u = best_match_18h[:, :, 2]
+        best_match_18h_100v = best_match_18h[:, :, 3]
         best_match_18h_tp = best_match_18h[:, :, 4]
         best_match_18h_sp = best_match_18h[:, :, 5]
         
         best_match_19h_2t = best_match_19h[:, :, 0]
         best_match_19h_2d = best_match_19h[:, :, 1]
-        best_match_19h_100u = best_match_19h[:, :, 2]/3.6
-        best_match_19h_100v = best_match_19h[:, :, 3]/3.6
+        best_match_19h_100u = best_match_19h[:, :, 2]
+        best_match_19h_100v = best_match_19h[:, :, 3]
         best_match_19h_tp = best_match_19h[:, :, 4]
         best_match_19h_sp = best_match_19h[:, :, 5]
         
         best_match_20h_2t = best_match_20h[:, :, 0]
         best_match_20h_2d = best_match_20h[:, :, 1]
-        best_match_20h_100u = best_match_20h[:, :, 2]/3.6
-        best_match_20h_100v = best_match_20h[:, :, 3]/3.6
+        best_match_20h_100u = best_match_20h[:, :, 2]
+        best_match_20h_100v = best_match_20h[:, :, 3]
         best_match_20h_tp = best_match_20h[:, :, 4]
         best_match_20h_sp = best_match_20h[:, :, 5]
         
+        best_match_21h_2t = best_match_21h[:, :, 0]
+        best_match_21h_2d = best_match_21h[:, :, 1]
+        best_match_21h_100u = best_match_21h[:, :, 2]
+        best_match_21h_100v = best_match_21h[:, :, 3]
+        best_match_21h_tp = best_match_21h[:, :, 4]
+        best_match_21h_sp = best_match_21h[:, :, 5]
+        
+        best_match_22h_2t = best_match_22h[:, :, 0]
+        best_match_22h_2d = best_match_22h[:, :, 1]
+        best_match_22h_100u = best_match_22h[:, :, 2]
+        best_match_22h_100v = best_match_22h[:, :, 3]
+        best_match_22h_tp = best_match_22h[:, :, 4]
+        best_match_22h_sp = best_match_22h[:, :, 5]
+
+        best_match_23h_2t = best_match_23h[:, :, 0]
+        best_match_23h_2d = best_match_23h[:, :, 1]
+        best_match_23h_100u = best_match_23h[:, :, 2]
+        best_match_23h_100v = best_match_23h[:, :, 3]
+        best_match_23h_tp = best_match_23h[:, :, 4]
+        best_match_23h_sp = best_match_23h[:, :, 5]
+        
+        best_match_24h_2t = best_match_24h[:, :, 0]
+        best_match_24h_2d = best_match_24h[:, :, 1]
+        best_match_24h_100u = best_match_24h[:, :, 2]
+        best_match_24h_100v = best_match_24h[:, :, 3]
+        best_match_24h_tp = best_match_24h[:, :, 4]
+        best_match_24h_sp = best_match_24h[:, :, 5]
+        
+
         ecmwf_ifs_1h_2t = ecmwf_ifs_1h[:, :, 0]
         ecmwf_ifs_1h_2d = ecmwf_ifs_1h[:, :, 1]
-        ecmwf_ifs_1h_100u = ecmwf_ifs_1h[:, :, 2]/3.6
-        ecmwf_ifs_1h_100v = ecmwf_ifs_1h[:, :, 3]/3.6
+        ecmwf_ifs_1h_100u = ecmwf_ifs_1h[:, :, 2]
+        ecmwf_ifs_1h_100v = ecmwf_ifs_1h[:, :, 3]
         ecmwf_ifs_1h_tp = ecmwf_ifs_1h[:, :, 4]
         ecmwf_ifs_1h_sp = ecmwf_ifs_1h[:, :, 5]
         
         ecmwf_ifs_2h_2t = ecmwf_ifs_2h[:, :, 0]
         ecmwf_ifs_2h_2d = ecmwf_ifs_2h[:, :, 1]
-        ecmwf_ifs_2h_100u = ecmwf_ifs_2h[:, :, 2]/3.6
-        ecmwf_ifs_2h_100v = ecmwf_ifs_2h[:, :, 3]/3.6
+        ecmwf_ifs_2h_100u = ecmwf_ifs_2h[:, :, 2]
+        ecmwf_ifs_2h_100v = ecmwf_ifs_2h[:, :, 3]
         ecmwf_ifs_2h_tp = ecmwf_ifs_2h[:, :, 4]
         ecmwf_ifs_2h_sp = ecmwf_ifs_2h[:, :, 5]
         
         ecmwf_ifs_3h_2t = ecmwf_ifs_3h[:, :, 0]
         ecmwf_ifs_3h_2d = ecmwf_ifs_3h[:, :, 1]
-        ecmwf_ifs_3h_100u = ecmwf_ifs_3h[:, :, 2]/3.6
-        ecmwf_ifs_3h_100v = ecmwf_ifs_3h[:, :, 3]/3.6
+        ecmwf_ifs_3h_100u = ecmwf_ifs_3h[:, :, 2]
+        ecmwf_ifs_3h_100v = ecmwf_ifs_3h[:, :, 3]
         ecmwf_ifs_3h_tp = ecmwf_ifs_3h[:, :, 4]
         ecmwf_ifs_3h_sp = ecmwf_ifs_3h[:, :, 5]
         
         ecmwf_ifs_4h_2t = ecmwf_ifs_4h[:, :, 0]
         ecmwf_ifs_4h_2d = ecmwf_ifs_4h[:, :, 1]
-        ecmwf_ifs_4h_100u = ecmwf_ifs_4h[:, :, 2]/3.6
-        ecmwf_ifs_4h_100v = ecmwf_ifs_4h[:, :, 3]/3.6
+        ecmwf_ifs_4h_100u = ecmwf_ifs_4h[:, :, 2]
+        ecmwf_ifs_4h_100v = ecmwf_ifs_4h[:, :, 3]
         ecmwf_ifs_4h_tp = ecmwf_ifs_4h[:, :, 4]
         ecmwf_ifs_4h_sp = ecmwf_ifs_4h[:, :, 5]
         
         ecmwf_ifs_5h_2t = ecmwf_ifs_5h[:, :, 0]
         ecmwf_ifs_5h_2d = ecmwf_ifs_5h[:, :, 1]
-        ecmwf_ifs_5h_100u = ecmwf_ifs_5h[:, :, 2]/3.6
-        ecmwf_ifs_5h_100v = ecmwf_ifs_5h[:, :, 3]/3.6
+        ecmwf_ifs_5h_100u = ecmwf_ifs_5h[:, :, 2]
+        ecmwf_ifs_5h_100v = ecmwf_ifs_5h[:, :, 3]
         ecmwf_ifs_5h_tp = ecmwf_ifs_5h[:, :, 4]
         ecmwf_ifs_5h_sp = ecmwf_ifs_5h[:, :, 5]
 
         ecmwf_ifs_6h_2t = ecmwf_ifs_6h[:, :, 0]
         ecmwf_ifs_6h_2d = ecmwf_ifs_6h[:, :, 1]
-        ecmwf_ifs_6h_100u = ecmwf_ifs_6h[:, :, 2]/3.6
-        ecmwf_ifs_6h_100v = ecmwf_ifs_6h[:, :, 3]/3.6
+        ecmwf_ifs_6h_100u = ecmwf_ifs_6h[:, :, 2]
+        ecmwf_ifs_6h_100v = ecmwf_ifs_6h[:, :, 3]
         ecmwf_ifs_6h_tp = ecmwf_ifs_6h[:, :, 4]
         ecmwf_ifs_6h_sp = ecmwf_ifs_6h[:, :, 5]
         
         ecmwf_ifs_7h_2t = ecmwf_ifs_7h[:, :, 0]
         ecmwf_ifs_7h_2d = ecmwf_ifs_7h[:, :, 1]
-        ecmwf_ifs_7h_100u = ecmwf_ifs_7h[:, :, 2]/3.6
-        ecmwf_ifs_7h_100v = ecmwf_ifs_7h[:, :, 3]/3.6
+        ecmwf_ifs_7h_100u = ecmwf_ifs_7h[:, :, 2]
+        ecmwf_ifs_7h_100v = ecmwf_ifs_7h[:, :, 3]
         ecmwf_ifs_7h_tp = ecmwf_ifs_7h[:, :, 4]
         ecmwf_ifs_7h_sp = ecmwf_ifs_7h[:, :, 5]
         
         ecmwf_ifs_8h_2t = ecmwf_ifs_8h[:, :, 0]
         ecmwf_ifs_8h_2d = ecmwf_ifs_8h[:, :, 1]
-        ecmwf_ifs_8h_100u = ecmwf_ifs_8h[:, :, 2]/3.6
-        ecmwf_ifs_8h_100v = ecmwf_ifs_8h[:, :, 3]/3.6
+        ecmwf_ifs_8h_100u = ecmwf_ifs_8h[:, :, 2]
+        ecmwf_ifs_8h_100v = ecmwf_ifs_8h[:, :, 3]
         ecmwf_ifs_8h_tp = ecmwf_ifs_8h[:, :, 4]
         ecmwf_ifs_8h_sp = ecmwf_ifs_8h[:, :, 5]
         
         ecmwf_ifs_9h_2t = ecmwf_ifs_9h[:, :, 0]
         ecmwf_ifs_9h_2d = ecmwf_ifs_9h[:, :, 1]
-        ecmwf_ifs_9h_100u = ecmwf_ifs_9h[:, :, 2]/3.6
-        ecmwf_ifs_9h_100v = ecmwf_ifs_9h[:, :, 3]/3.6
+        ecmwf_ifs_9h_100u = ecmwf_ifs_9h[:, :, 2]
+        ecmwf_ifs_9h_100v = ecmwf_ifs_9h[:, :, 3]
         ecmwf_ifs_9h_tp = ecmwf_ifs_9h[:, :, 4]
         ecmwf_ifs_9h_sp = ecmwf_ifs_9h[:, :, 5]
         
         ecmwf_ifs_10h_2t = ecmwf_ifs_10h[:, :, 0]
         ecmwf_ifs_10h_2d = ecmwf_ifs_10h[:, :, 1]
-        ecmwf_ifs_10h_100u = ecmwf_ifs_10h[:, :, 2]/3.6
-        ecmwf_ifs_10h_100v = ecmwf_ifs_10h[:, :, 3]/3.6
+        ecmwf_ifs_10h_100u = ecmwf_ifs_10h[:, :, 2]
+        ecmwf_ifs_10h_100v = ecmwf_ifs_10h[:, :, 3]
         ecmwf_ifs_10h_tp = ecmwf_ifs_10h[:, :, 4]
         ecmwf_ifs_10h_sp = ecmwf_ifs_10h[:, :, 5]
         
         ecmwf_ifs_11h_2t = ecmwf_ifs_11h[:, :, 0]
         ecmwf_ifs_11h_2d = ecmwf_ifs_11h[:, :, 1]
-        ecmwf_ifs_11h_100u = ecmwf_ifs_11h[:, :, 2]/3.6
-        ecmwf_ifs_11h_100v = ecmwf_ifs_11h[:, :, 3]/3.6
+        ecmwf_ifs_11h_100u = ecmwf_ifs_11h[:, :, 2]
+        ecmwf_ifs_11h_100v = ecmwf_ifs_11h[:, :, 3]
         ecmwf_ifs_11h_tp = ecmwf_ifs_11h[:, :, 4]
         ecmwf_ifs_11h_sp = ecmwf_ifs_11h[:, :, 5]
         
         ecmwf_ifs_12h_2t = ecmwf_ifs_12h[:, :, 0]
         ecmwf_ifs_12h_2d = ecmwf_ifs_12h[:, :, 1]
-        ecmwf_ifs_12h_100u = ecmwf_ifs_12h[:, :, 2]/3.6
-        ecmwf_ifs_12h_100v = ecmwf_ifs_12h[:, :, 3]/3.6
+        ecmwf_ifs_12h_100u = ecmwf_ifs_12h[:, :, 2]
+        ecmwf_ifs_12h_100v = ecmwf_ifs_12h[:, :, 3]
         ecmwf_ifs_12h_tp = ecmwf_ifs_12h[:, :, 4]
         ecmwf_ifs_12h_sp = ecmwf_ifs_12h[:, :, 5]
         
         ecmwf_ifs_13h_2t = ecmwf_ifs_13h[:, :, 0]
         ecmwf_ifs_13h_2d = ecmwf_ifs_13h[:, :, 1]
-        ecmwf_ifs_13h_100u = ecmwf_ifs_13h[:, :, 2]/3.6
-        ecmwf_ifs_13h_100v = ecmwf_ifs_13h[:, :, 3]/3.6
+        ecmwf_ifs_13h_100u = ecmwf_ifs_13h[:, :, 2]
+        ecmwf_ifs_13h_100v = ecmwf_ifs_13h[:, :, 3]
         ecmwf_ifs_13h_tp = ecmwf_ifs_13h[:, :, 4]
         ecmwf_ifs_13h_sp = ecmwf_ifs_13h[:, :, 5]
         
         ecmwf_ifs_14h_2t = ecmwf_ifs_14h[:, :, 0]
         ecmwf_ifs_14h_2d = ecmwf_ifs_14h[:, :, 1]
-        ecmwf_ifs_14h_100u = ecmwf_ifs_14h[:, :, 2]/3.6
-        ecmwf_ifs_14h_100v = ecmwf_ifs_14h[:, :, 3]/3.6
+        ecmwf_ifs_14h_100u = ecmwf_ifs_14h[:, :, 2]
+        ecmwf_ifs_14h_100v = ecmwf_ifs_14h[:, :, 3]
         ecmwf_ifs_14h_tp = ecmwf_ifs_14h[:, :, 4]
         ecmwf_ifs_14h_sp = ecmwf_ifs_14h[:, :, 5]
         
         ecmwf_ifs_15h_2t = ecmwf_ifs_15h[:, :, 0]
         ecmwf_ifs_15h_2d = ecmwf_ifs_15h[:, :, 1]
-        ecmwf_ifs_15h_100u = ecmwf_ifs_15h[:, :, 2]/3.6
-        ecmwf_ifs_15h_100v = ecmwf_ifs_15h[:, :, 3]/3.6
+        ecmwf_ifs_15h_100u = ecmwf_ifs_15h[:, :, 2]
+        ecmwf_ifs_15h_100v = ecmwf_ifs_15h[:, :, 3]
         ecmwf_ifs_15h_tp = ecmwf_ifs_15h[:, :, 4]
         ecmwf_ifs_15h_sp = ecmwf_ifs_15h[:, :, 5]
         
         ecmwf_ifs_16h_2t = ecmwf_ifs_16h[:, :, 0]
         ecmwf_ifs_16h_2d = ecmwf_ifs_16h[:, :, 1]
-        ecmwf_ifs_16h_100u = ecmwf_ifs_16h[:, :, 2]/3.6
-        ecmwf_ifs_16h_100v = ecmwf_ifs_16h[:, :, 3]/3.6
+        ecmwf_ifs_16h_100u = ecmwf_ifs_16h[:, :, 2]
+        ecmwf_ifs_16h_100v = ecmwf_ifs_16h[:, :, 3]
         ecmwf_ifs_16h_tp = ecmwf_ifs_16h[:, :, 4]
         ecmwf_ifs_16h_sp = ecmwf_ifs_16h[:, :, 5]
 
         ecmwf_ifs_17h_2t = ecmwf_ifs_17h[:, :, 0]
         ecmwf_ifs_17h_2d = ecmwf_ifs_17h[:, :, 1]
-        ecmwf_ifs_17h_100u = ecmwf_ifs_17h[:, :, 2]/3.6
-        ecmwf_ifs_17h_100v = ecmwf_ifs_17h[:, :, 3]/3.6
+        ecmwf_ifs_17h_100u = ecmwf_ifs_17h[:, :, 2]
+        ecmwf_ifs_17h_100v = ecmwf_ifs_17h[:, :, 3]
         ecmwf_ifs_17h_tp = ecmwf_ifs_17h[:, :, 4]
         ecmwf_ifs_17h_sp = ecmwf_ifs_17h[:, :, 5]
         
         ecmwf_ifs_18h_2t = ecmwf_ifs_18h[:, :, 0]
         ecmwf_ifs_18h_2d = ecmwf_ifs_18h[:, :, 1]
-        ecmwf_ifs_18h_100u = ecmwf_ifs_18h[:, :, 2]/3.6
-        ecmwf_ifs_18h_100v = ecmwf_ifs_18h[:, :, 3]/3.6
+        ecmwf_ifs_18h_100u = ecmwf_ifs_18h[:, :, 2]
+        ecmwf_ifs_18h_100v = ecmwf_ifs_18h[:, :, 3]
         ecmwf_ifs_18h_tp = ecmwf_ifs_18h[:, :, 4]
         ecmwf_ifs_18h_sp = ecmwf_ifs_18h[:, :, 5]
         
         ecmwf_ifs_19h_2t = ecmwf_ifs_19h[:, :, 0]
         ecmwf_ifs_19h_2d = ecmwf_ifs_19h[:, :, 1]
-        ecmwf_ifs_19h_100u = ecmwf_ifs_19h[:, :, 2]/3.6
-        ecmwf_ifs_19h_100v = ecmwf_ifs_19h[:, :, 3]/3.6
+        ecmwf_ifs_19h_100u = ecmwf_ifs_19h[:, :, 2]
+        ecmwf_ifs_19h_100v = ecmwf_ifs_19h[:, :, 3]
         ecmwf_ifs_19h_tp = ecmwf_ifs_19h[:, :, 4]
         ecmwf_ifs_19h_sp = ecmwf_ifs_19h[:, :, 5]
         
         ecmwf_ifs_20h_2t = ecmwf_ifs_20h[:, :, 0]
         ecmwf_ifs_20h_2d = ecmwf_ifs_20h[:, :, 1]
-        ecmwf_ifs_20h_100u = ecmwf_ifs_20h[:, :, 2]/3.6
-        ecmwf_ifs_20h_100v = ecmwf_ifs_20h[:, :, 3]/3.6
+        ecmwf_ifs_20h_100u = ecmwf_ifs_20h[:, :, 2]
+        ecmwf_ifs_20h_100v = ecmwf_ifs_20h[:, :, 3]
         ecmwf_ifs_20h_tp = ecmwf_ifs_20h[:, :, 4]
         ecmwf_ifs_20h_sp = ecmwf_ifs_20h[:, :, 5]
 
+        ecmwf_ifs_21h_2t = ecmwf_ifs_21h[:, :, 0]
+        ecmwf_ifs_21h_2d = ecmwf_ifs_21h[:, :, 1]
+        ecmwf_ifs_21h_100u = ecmwf_ifs_21h[:, :, 2]
+        ecmwf_ifs_21h_100v = ecmwf_ifs_21h[:, :, 3]
+        ecmwf_ifs_21h_tp = ecmwf_ifs_21h[:, :, 4]
+        ecmwf_ifs_21h_sp = ecmwf_ifs_21h[:, :, 5]
+        
+        ecmwf_ifs_22h_2t = ecmwf_ifs_22h[:, :, 0]
+        ecmwf_ifs_22h_2d = ecmwf_ifs_22h[:, :, 1]
+        ecmwf_ifs_22h_100u = ecmwf_ifs_22h[:, :, 2]
+        ecmwf_ifs_22h_100v = ecmwf_ifs_22h[:, :, 3]
+        ecmwf_ifs_22h_tp = ecmwf_ifs_22h[:, :, 4]
+        ecmwf_ifs_22h_sp = ecmwf_ifs_22h[:, :, 5]
+        
+        ecmwf_ifs_23h_2t = ecmwf_ifs_23h[:, :, 0]
+        ecmwf_ifs_23h_2d = ecmwf_ifs_23h[:, :, 1]
+        ecmwf_ifs_23h_100u = ecmwf_ifs_23h[:, :, 2]
+        ecmwf_ifs_23h_100v = ecmwf_ifs_23h[:, :, 3]
+        ecmwf_ifs_23h_tp = ecmwf_ifs_23h[:, :, 4]
+        ecmwf_ifs_23h_sp = ecmwf_ifs_23h[:, :, 5]
+        
+        ecmwf_ifs_24h_2t = ecmwf_ifs_24h[:, :, 0]
+        ecmwf_ifs_24h_2d = ecmwf_ifs_24h[:, :, 1]
+        ecmwf_ifs_24h_100u = ecmwf_ifs_24h[:, :, 2]
+        ecmwf_ifs_24h_100v = ecmwf_ifs_24h[:, :, 3]
+        ecmwf_ifs_24h_tp = ecmwf_ifs_24h[:, :, 4]
+        ecmwf_ifs_24h_sp = ecmwf_ifs_24h[:, :, 5]
+        
         gfs_global_1h_2t = gfs_global_1h[:, :, 0]
         gfs_global_1h_2d = gfs_global_1h[:, :, 1]
-        gfs_global_1h_100u = gfs_global_1h[:, :, 2]/3.6
-        gfs_global_1h_100v = gfs_global_1h[:, :, 3]/3.6
+        gfs_global_1h_100u = gfs_global_1h[:, :, 2]
+        gfs_global_1h_100v = gfs_global_1h[:, :, 3]
         gfs_global_1h_tp = gfs_global_1h[:, :, 4]
         gfs_global_1h_sp = gfs_global_1h[:, :, 5]
         
         gfs_global_2h_2t = gfs_global_2h[:, :, 0]
         gfs_global_2h_2d = gfs_global_2h[:, :, 1]
-        gfs_global_2h_100u = gfs_global_2h[:, :, 2]/3.6
-        gfs_global_2h_100v = gfs_global_2h[:, :, 3]/3.6
+        gfs_global_2h_100u = gfs_global_2h[:, :, 2]
+        gfs_global_2h_100v = gfs_global_2h[:, :, 3]
         gfs_global_2h_tp = gfs_global_2h[:, :, 4]
         gfs_global_2h_sp = gfs_global_2h[:, :, 5]
         
         gfs_global_3h_2t = gfs_global_3h[:, :, 0]
         gfs_global_3h_2d = gfs_global_3h[:, :, 1]
-        gfs_global_3h_100u = gfs_global_3h[:, :, 2]/3.6
-        gfs_global_3h_100v = gfs_global_3h[:, :, 3]/3.6
+        gfs_global_3h_100u = gfs_global_3h[:, :, 2]
+        gfs_global_3h_100v = gfs_global_3h[:, :, 3]
         gfs_global_3h_tp = gfs_global_3h[:, :, 4]
         gfs_global_3h_sp = gfs_global_3h[:, :, 5]
         
         gfs_global_4h_2t = gfs_global_4h[:, :, 0]
         gfs_global_4h_2d = gfs_global_4h[:, :, 1]
-        gfs_global_4h_100u = gfs_global_4h[:, :, 2]/3.6
-        gfs_global_4h_100v = gfs_global_4h[:, :, 3]/3.6
+        gfs_global_4h_100u = gfs_global_4h[:, :, 2]
+        gfs_global_4h_100v = gfs_global_4h[:, :, 3]
         gfs_global_4h_tp = gfs_global_4h[:, :, 4]
         gfs_global_4h_sp = gfs_global_4h[:, :, 5]
         
         gfs_global_5h_2t = gfs_global_5h[:, :, 0]
         gfs_global_5h_2d = gfs_global_5h[:, :, 1]
-        gfs_global_5h_100u = gfs_global_5h[:, :, 2]/3.6
-        gfs_global_5h_100v = gfs_global_5h[:, :, 3]/3.6
+        gfs_global_5h_100u = gfs_global_5h[:, :, 2]
+        gfs_global_5h_100v = gfs_global_5h[:, :, 3]
         gfs_global_5h_tp = gfs_global_5h[:, :, 4]
         gfs_global_5h_sp = gfs_global_5h[:, :, 5]
 
         gfs_global_6h_2t = gfs_global_6h[:, :, 0]
         gfs_global_6h_2d = gfs_global_6h[:, :, 1]
-        gfs_global_6h_100u = gfs_global_6h[:, :, 2]/3.6
-        gfs_global_6h_100v = gfs_global_6h[:, :, 3]/3.6
+        gfs_global_6h_100u = gfs_global_6h[:, :, 2]
+        gfs_global_6h_100v = gfs_global_6h[:, :, 3]
         gfs_global_6h_tp = gfs_global_6h[:, :, 4]
         gfs_global_6h_sp = gfs_global_6h[:, :, 5]
 
         gfs_global_7h_2t = gfs_global_7h[:, :, 0]
         gfs_global_7h_2d = gfs_global_7h[:, :, 1]
-        gfs_global_7h_100u = gfs_global_7h[:, :, 2]/3.6
-        gfs_global_7h_100v = gfs_global_7h[:, :, 3]/3.6
+        gfs_global_7h_100u = gfs_global_7h[:, :, 2]
+        gfs_global_7h_100v = gfs_global_7h[:, :, 3]
         gfs_global_7h_tp = gfs_global_7h[:, :, 4]
         gfs_global_7h_sp = gfs_global_7h[:, :, 5]
         
         gfs_global_8h_2t = gfs_global_8h[:, :, 0]
         gfs_global_8h_2d = gfs_global_8h[:, :, 1]
-        gfs_global_8h_100u = gfs_global_8h[:, :, 2]/3.6
-        gfs_global_8h_100v = gfs_global_8h[:, :, 3]/3.6
+        gfs_global_8h_100u = gfs_global_8h[:, :, 2]
+        gfs_global_8h_100v = gfs_global_8h[:, :, 3]
         gfs_global_8h_tp = gfs_global_8h[:, :, 4]
         gfs_global_8h_sp = gfs_global_8h[:, :, 5]
         
         gfs_global_9h_2t = gfs_global_9h[:, :, 0]
         gfs_global_9h_2d = gfs_global_9h[:, :, 1]
-        gfs_global_9h_100u = gfs_global_9h[:, :, 2]/3.6
-        gfs_global_9h_100v = gfs_global_9h[:, :, 3]/3.6
+        gfs_global_9h_100u = gfs_global_9h[:, :, 2]
+        gfs_global_9h_100v = gfs_global_9h[:, :, 3]
         gfs_global_9h_tp = gfs_global_9h[:, :, 4]
         gfs_global_9h_sp = gfs_global_9h[:, :, 5]
         
         gfs_global_10h_2t = gfs_global_10h[:, :, 0]
         gfs_global_10h_2d = gfs_global_10h[:, :, 1]
-        gfs_global_10h_100u = gfs_global_10h[:, :, 2]/3.6
-        gfs_global_10h_100v = gfs_global_10h[:, :, 3]/3.6
+        gfs_global_10h_100u = gfs_global_10h[:, :, 2]
+        gfs_global_10h_100v = gfs_global_10h[:, :, 3]
         gfs_global_10h_tp = gfs_global_10h[:, :, 4]
         gfs_global_10h_sp = gfs_global_10h[:, :, 5]
         
         gfs_global_11h_2t = gfs_global_11h[:, :, 0]
         gfs_global_11h_2d = gfs_global_11h[:, :, 1]
-        gfs_global_11h_100u = gfs_global_11h[:, :, 2]/3.6
-        gfs_global_11h_100v = gfs_global_11h[:, :, 3]/3.6
+        gfs_global_11h_100u = gfs_global_11h[:, :, 2]
+        gfs_global_11h_100v = gfs_global_11h[:, :, 3]
         gfs_global_11h_tp = gfs_global_11h[:, :, 4]
         gfs_global_11h_sp = gfs_global_11h[:, :, 5]
         
         gfs_global_12h_2t = gfs_global_12h[:, :, 0]
         gfs_global_12h_2d = gfs_global_12h[:, :, 1]
-        gfs_global_12h_100u = gfs_global_12h[:, :, 2]/3.6
-        gfs_global_12h_100v = gfs_global_12h[:, :, 3]/3.6
+        gfs_global_12h_100u = gfs_global_12h[:, :, 2]
+        gfs_global_12h_100v = gfs_global_12h[:, :, 3]
         gfs_global_12h_tp = gfs_global_12h[:, :, 4]
         gfs_global_12h_sp = gfs_global_12h[:, :, 5]
         
         gfs_global_13h_2t = gfs_global_13h[:, :, 0]
         gfs_global_13h_2d = gfs_global_13h[:, :, 1]
-        gfs_global_13h_100u = gfs_global_13h[:, :, 2]/3.6
-        gfs_global_13h_100v = gfs_global_13h[:, :, 3]/3.6
+        gfs_global_13h_100u = gfs_global_13h[:, :, 2]
+        gfs_global_13h_100v = gfs_global_13h[:, :, 3]
         gfs_global_13h_tp = gfs_global_13h[:, :, 4]
         gfs_global_13h_sp = gfs_global_13h[:, :, 5]
         
         gfs_global_14h_2t = gfs_global_14h[:, :, 0]
         gfs_global_14h_2d = gfs_global_14h[:, :, 1]
-        gfs_global_14h_100u = gfs_global_14h[:, :, 2]/3.6
-        gfs_global_14h_100v = gfs_global_14h[:, :, 3]/3.6
+        gfs_global_14h_100u = gfs_global_14h[:, :, 2]
+        gfs_global_14h_100v = gfs_global_14h[:, :, 3]
         gfs_global_14h_tp = gfs_global_14h[:, :, 4]
         gfs_global_14h_sp = gfs_global_14h[:, :, 5]
         
         gfs_global_15h_2t = gfs_global_15h[:, :, 0]
         gfs_global_15h_2d = gfs_global_15h[:, :, 1]
-        gfs_global_15h_100u = gfs_global_15h[:, :, 2]/3.6
-        gfs_global_15h_100v = gfs_global_15h[:, :, 3]/3.6
+        gfs_global_15h_100u = gfs_global_15h[:, :, 2]
+        gfs_global_15h_100v = gfs_global_15h[:, :, 3]
         gfs_global_15h_tp = gfs_global_15h[:, :, 4]
         gfs_global_15h_sp = gfs_global_15h[:, :, 5]
         
         gfs_global_16h_2t = gfs_global_16h[:, :, 0]
         gfs_global_16h_2d = gfs_global_16h[:, :, 1]
-        gfs_global_16h_100u = gfs_global_16h[:, :, 2]/3.6
-        gfs_global_16h_100v = gfs_global_16h[:, :, 3]/3.6
+        gfs_global_16h_100u = gfs_global_16h[:, :, 2]
+        gfs_global_16h_100v = gfs_global_16h[:, :, 3]
         gfs_global_16h_tp = gfs_global_16h[:, :, 4]
         gfs_global_16h_sp = gfs_global_16h[:, :, 5]
         
         gfs_global_17h_2t = gfs_global_17h[:, :, 0]
         gfs_global_17h_2d = gfs_global_17h[:, :, 1]
-        gfs_global_17h_100u = gfs_global_17h[:, :, 2]/3.6
-        gfs_global_17h_100v = gfs_global_17h[:, :, 3]/3.6
+        gfs_global_17h_100u = gfs_global_17h[:, :, 2]
+        gfs_global_17h_100v = gfs_global_17h[:, :, 3]
         gfs_global_17h_tp = gfs_global_17h[:, :, 4]
         gfs_global_17h_sp = gfs_global_17h[:, :, 5]
         
         gfs_global_18h_2t = gfs_global_18h[:, :, 0]
         gfs_global_18h_2d = gfs_global_18h[:, :, 1]
-        gfs_global_18h_100u = gfs_global_18h[:, :, 2]/3.6
-        gfs_global_18h_100v = gfs_global_18h[:, :, 3]/3.6
+        gfs_global_18h_100u = gfs_global_18h[:, :, 2]
+        gfs_global_18h_100v = gfs_global_18h[:, :, 3]
         gfs_global_18h_tp = gfs_global_18h[:, :, 4]
         gfs_global_18h_sp = gfs_global_18h[:, :, 5]
         
         gfs_global_19h_2t = gfs_global_19h[:, :, 0]
         gfs_global_19h_2d = gfs_global_19h[:, :, 1]
-        gfs_global_19h_100u = gfs_global_19h[:, :, 2]/3.6
-        gfs_global_19h_100v = gfs_global_19h[:, :, 3]/3.6
+        gfs_global_19h_100u = gfs_global_19h[:, :, 2]
+        gfs_global_19h_100v = gfs_global_19h[:, :, 3]
         gfs_global_19h_tp = gfs_global_19h[:, :, 4]
         gfs_global_19h_sp = gfs_global_19h[:, :, 5]
         
         gfs_global_20h_2t = gfs_global_20h[:, :, 0]
         gfs_global_20h_2d = gfs_global_20h[:, :, 1]
-        gfs_global_20h_100u = gfs_global_20h[:, :, 2]/3.6
-        gfs_global_20h_100v = gfs_global_20h[:, :, 3]/3.6
+        gfs_global_20h_100u = gfs_global_20h[:, :, 2]
+        gfs_global_20h_100v = gfs_global_20h[:, :, 3]
         gfs_global_20h_tp = gfs_global_20h[:, :, 4]
         gfs_global_20h_sp = gfs_global_20h[:, :, 5]
         
-        graphcast_1h_2t = graphcast_1h[:, :, 0]
-        graphcast_1h_2d = graphcast_1h[:, :, 1]
-        graphcast_1h_100u = graphcast_1h[:, :, 2]/3.6
-        graphcast_1h_100v = graphcast_1h[:, :, 3]/3.6
-        graphcast_1h_tp = graphcast_1h[:, :, 4]
-        graphcast_1h_sp = graphcast_1h[:, :, 5]
+        gfs_global_21h_2t = gfs_global_21h[:, :, 0]
+        gfs_global_21h_2d = gfs_global_21h[:, :, 1]
+        gfs_global_21h_100u = gfs_global_21h[:, :, 2]
+        gfs_global_21h_100v = gfs_global_21h[:, :, 3]
+        gfs_global_21h_tp = gfs_global_21h[:, :, 4]
+        gfs_global_21h_sp = gfs_global_21h[:, :, 5]
         
-        graphcast_2h_2t = graphcast_2h[:, :, 0]
-        graphcast_2h_2d = graphcast_2h[:, :, 1]
-        graphcast_2h_100u = graphcast_2h[:, :, 2]/3.6
-        graphcast_2h_100v = graphcast_2h[:, :, 3]/3.6
-        graphcast_2h_tp = graphcast_2h[:, :, 4]
-        graphcast_2h_sp = graphcast_2h[:, :, 5]
+        gfs_global_22h_2t = gfs_global_22h[:, :, 0]
+        gfs_global_22h_2d = gfs_global_22h[:, :, 1]
+        gfs_global_22h_100u = gfs_global_22h[:, :, 2]
+        gfs_global_22h_100v = gfs_global_22h[:, :, 3]
+        gfs_global_22h_tp = gfs_global_22h[:, :, 4]
+        gfs_global_22h_sp = gfs_global_22h[:, :, 5]
         
-        graphcast_3h_2t = graphcast_3h[:, :, 0]
-        graphcast_3h_2d = graphcast_3h[:, :, 1]
-        graphcast_3h_100u = graphcast_3h[:, :, 2]/3.6
-        graphcast_3h_100v = graphcast_3h[:, :, 3]/3.6
-        graphcast_3h_tp = graphcast_3h[:, :, 4]
-        graphcast_3h_sp = graphcast_3h[:, :, 5]
+        gfs_global_23h_2t = gfs_global_23h[:, :, 0]
+        gfs_global_23h_2d = gfs_global_23h[:, :, 1]
+        gfs_global_23h_100u = gfs_global_23h[:, :, 2]
+        gfs_global_23h_100v = gfs_global_23h[:, :, 3]
+        gfs_global_23h_tp = gfs_global_23h[:, :, 4]
+        gfs_global_23h_sp = gfs_global_23h[:, :, 5]
         
-        graphcast_4h_2t = graphcast_4h[:, :, 0]
-        graphcast_4h_2d = graphcast_4h[:, :, 1]
-        graphcast_4h_100u = graphcast_4h[:, :, 2]/3.6
-        graphcast_4h_100v = graphcast_4h[:, :, 3]/3.6
-        graphcast_4h_tp = graphcast_4h[:, :, 4]
-        graphcast_4h_sp = graphcast_4h[:, :, 5]
+        gfs_global_24h_2t = gfs_global_24h[:, :, 0]
+        gfs_global_24h_2d = gfs_global_24h[:, :, 1]
+        gfs_global_24h_100u = gfs_global_24h[:, :, 2]
+        gfs_global_24h_100v = gfs_global_24h[:, :, 3]
+        gfs_global_24h_tp = gfs_global_24h[:, :, 4]
+        gfs_global_24h_sp = gfs_global_24h[:, :, 5]
         
-        graphcast_5h_2t = graphcast_5h[:, :, 0]
-        graphcast_5h_2d = graphcast_5h[:, :, 1]
-        graphcast_5h_100u = graphcast_5h[:, :, 2]/3.6
-        graphcast_5h_100v = graphcast_5h[:, :, 3]/3.6
-        graphcast_5h_tp = graphcast_5h[:, :, 4]
-        graphcast_5h_sp = graphcast_5h[:, :, 5]
+        AIFS_1h_2t = AIFS_1h[:, :, 0]
+        AIFS_1h_2d = AIFS_1h[:, :, 1]
+        AIFS_1h_100u = AIFS_1h[:, :, 2]
+        AIFS_1h_100v = AIFS_1h[:, :, 3]
+        AIFS_1h_tp = AIFS_1h[:, :, 4]
+        AIFS_1h_sp = AIFS_1h[:, :, 5]
         
-        graphcast_6h_2t = graphcast_6h[:, :, 0]
-        graphcast_6h_2d = graphcast_6h[:, :, 1]
-        graphcast_6h_100u = graphcast_6h[:, :, 2]/3.6
-        graphcast_6h_100v = graphcast_6h[:, :, 3]/3.6
-        graphcast_6h_tp = graphcast_6h[:, :, 4]
-        graphcast_6h_sp = graphcast_6h[:, :, 5]
+        AIFS_2h_2t = AIFS_2h[:, :, 0]
+        AIFS_2h_2d = AIFS_2h[:, :, 1]
+        AIFS_2h_100u = AIFS_2h[:, :, 2]
+        AIFS_2h_100v = AIFS_2h[:, :, 3]
+        AIFS_2h_tp = AIFS_2h[:, :, 4]
+        AIFS_2h_sp = AIFS_2h[:, :, 5]
         
-        graphcast_7h_2t = graphcast_7h[:, :, 0]
-        graphcast_7h_2d = graphcast_7h[:, :, 1]
-        graphcast_7h_100u = graphcast_7h[:, :, 2]/3.6
-        graphcast_7h_100v = graphcast_7h[:, :, 3]/3.6
-        graphcast_7h_tp = graphcast_7h[:, :, 4]
-        graphcast_7h_sp = graphcast_7h[:, :, 5]
+        AIFS_3h_2t = AIFS_3h[:, :, 0]
+        AIFS_3h_2d = AIFS_3h[:, :, 1]
+        AIFS_3h_100u = AIFS_3h[:, :, 2]
+        AIFS_3h_100v = AIFS_3h[:, :, 3]
+        AIFS_3h_tp = AIFS_3h[:, :, 4]
+        AIFS_3h_sp = AIFS_3h[:, :, 5]
         
-        graphcast_8h_2t = graphcast_8h[:, :, 0]
-        graphcast_8h_2d = graphcast_8h[:, :, 1]
-        graphcast_8h_100u = graphcast_8h[:, :, 2]/3.6
-        graphcast_8h_100v = graphcast_8h[:, :, 3]/3.6
-        graphcast_8h_tp = graphcast_8h[:, :, 4]
-        graphcast_8h_sp = graphcast_8h[:, :, 5]
+        AIFS_4h_2t = AIFS_4h[:, :, 0]
+        AIFS_4h_2d = AIFS_4h[:, :, 1]
+        AIFS_4h_100u = AIFS_4h[:, :, 2]
+        AIFS_4h_100v = AIFS_4h[:, :, 3]
+        AIFS_4h_tp = AIFS_4h[:, :, 4]
+        AIFS_4h_sp = AIFS_4h[:, :, 5]
         
+        AIFS_5h_2t = AIFS_5h[:, :, 0]
+        AIFS_5h_2d = AIFS_5h[:, :, 1]
+        AIFS_5h_100u = AIFS_5h[:, :, 2]
+        AIFS_5h_100v = AIFS_5h[:, :, 3]
+        AIFS_5h_tp = AIFS_5h[:, :, 4]
+        AIFS_5h_sp = AIFS_5h[:, :, 5]
         
-        graphcast_9h_2t = graphcast_9h[:, :, 0]
-        graphcast_9h_2d = graphcast_9h[:, :, 1]
-        graphcast_9h_100u = graphcast_9h[:, :, 2]/3.6
-        graphcast_9h_100v = graphcast_9h[:, :, 3]/3.6
-        graphcast_9h_tp = graphcast_9h[:, :, 4]
-        graphcast_9h_sp = graphcast_9h[:, :, 5]
+        AIFS_6h_2t = AIFS_6h[:, :, 0]
+        AIFS_6h_2d = AIFS_6h[:, :, 1]
+        AIFS_6h_100u = AIFS_6h[:, :, 2]
+        AIFS_6h_100v = AIFS_6h[:, :, 3]
+        AIFS_6h_tp = AIFS_6h[:, :, 4]
+        AIFS_6h_sp = AIFS_6h[:, :, 5]
         
-        graphcast_10h_2t = graphcast_10h[:, :, 0]
-        graphcast_10h_2d = graphcast_10h[:, :, 1]
-        graphcast_10h_100u = graphcast_10h[:, :, 2]/3.6
-        graphcast_10h_100v = graphcast_10h[:, :, 3]/3.6
-        graphcast_10h_tp = graphcast_10h[:, :, 4]
-        graphcast_10h_sp = graphcast_10h[:, :, 5]
+        AIFS_7h_2t = AIFS_7h[:, :, 0]
+        AIFS_7h_2d = AIFS_7h[:, :, 1]
+        AIFS_7h_100u = AIFS_7h[:, :, 2]
+        AIFS_7h_100v = AIFS_7h[:, :, 3]
+        AIFS_7h_tp = AIFS_7h[:, :, 4]
+        AIFS_7h_sp = AIFS_7h[:, :, 5]
         
-        graphcast_11h_2t = graphcast_11h[:, :, 0]
-        graphcast_11h_2d = graphcast_11h[:, :, 1]
-        graphcast_11h_100u = graphcast_11h[:, :, 2]/3.6
-        graphcast_11h_100v = graphcast_11h[:, :, 3]/3.6
-        graphcast_11h_tp = graphcast_11h[:, :, 4]
-        graphcast_11h_sp = graphcast_11h[:, :, 5]
+        AIFS_8h_2t = AIFS_8h[:, :, 0]
+        AIFS_8h_2d = AIFS_8h[:, :, 1]
+        AIFS_8h_100u = AIFS_8h[:, :, 2]
+        AIFS_8h_100v = AIFS_8h[:, :, 3]
+        AIFS_8h_tp = AIFS_8h[:, :, 4]
+        AIFS_8h_sp = AIFS_8h[:, :, 5]
         
-        graphcast_12h_2t = graphcast_12h[:, :, 0]
-        graphcast_12h_2d = graphcast_12h[:, :, 1]
-        graphcast_12h_100u = graphcast_12h[:, :, 2]/3.6
-        graphcast_12h_100v = graphcast_12h[:, :, 3]/3.6
-        graphcast_12h_tp = graphcast_12h[:, :, 4]
-        graphcast_12h_sp = graphcast_12h[:, :, 5]
+        AIFS_9h_2t = AIFS_9h[:, :, 0]
+        AIFS_9h_2d = AIFS_9h[:, :, 1]
+        AIFS_9h_100u = AIFS_9h[:, :, 2]
+        AIFS_9h_100v = AIFS_9h[:, :, 3]
+        AIFS_9h_tp = AIFS_9h[:, :, 4]
+        AIFS_9h_sp = AIFS_9h[:, :, 5]
         
-        graphcast_13h_2t = graphcast_13h[:, :, 0]
-        graphcast_13h_2d = graphcast_13h[:, :, 1]
-        graphcast_13h_100u = graphcast_13h[:, :, 2]/3.6
-        graphcast_13h_100v = graphcast_13h[:, :, 3]/3.6
-        graphcast_13h_tp = graphcast_13h[:, :, 4]
-        graphcast_13h_sp = graphcast_13h[:, :, 5]
-        
-        graphcast_14h_2t = graphcast_14h[:, :, 0]
-        graphcast_14h_2d = graphcast_14h[:, :, 1]
-        graphcast_14h_100u = graphcast_14h[:, :, 2]/3.6
-        graphcast_14h_100v = graphcast_14h[:, :, 3]/3.6
-        graphcast_14h_tp = graphcast_14h[:, :, 4]
-        graphcast_14h_sp = graphcast_14h[:, :, 5]
+        AIFS_10h_2t = AIFS_10h[:, :, 0]
+        AIFS_10h_2d = AIFS_10h[:, :, 1]
+        AIFS_10h_100u = AIFS_10h[:, :, 2]
+        AIFS_10h_100v = AIFS_10h[:, :, 3]
+        AIFS_10h_tp = AIFS_10h[:, :, 4]
+        AIFS_10h_sp = AIFS_10h[:, :, 5]
 
-        graphcast_15h_2t = graphcast_15h[:, :, 0]
-        graphcast_15h_2d = graphcast_15h[:, :, 1]
-        graphcast_15h_100u = graphcast_15h[:, :, 2]/3.6
-        graphcast_15h_100v = graphcast_15h[:, :, 3]/3.6
-        graphcast_15h_tp = graphcast_15h[:, :, 4]
-        graphcast_15h_sp = graphcast_15h[:, :, 5]
+        AIFS_11h_2t = AIFS_11h[:, :, 0]
+        AIFS_11h_2d = AIFS_11h[:, :, 1]
+        AIFS_11h_100u = AIFS_11h[:, :, 2]
+        AIFS_11h_100v = AIFS_11h[:, :, 3]
+        AIFS_11h_tp = AIFS_11h[:, :, 4]
+        AIFS_11h_sp = AIFS_11h[:, :, 5]
         
-        graphcast_15h_2d = graphcast_15h[:, :, 1]
-        graphcast_15h_100u = graphcast_15h[:, :, 2]/3.6
-        graphcast_15h_100v = graphcast_15h[:, :, 3]/3.6
-        graphcast_15h_tp = graphcast_15h[:, :, 4]
-        graphcast_15h_sp = graphcast_15h[:, :, 5]
+        AIFS_12h_2t = AIFS_12h[:, :, 0]
+        AIFS_12h_2d = AIFS_12h[:, :, 1]
+        AIFS_12h_100u = AIFS_12h[:, :, 2]
+        AIFS_12h_100v = AIFS_12h[:, :, 3]
+        AIFS_12h_tp = AIFS_12h[:, :, 4]
+        AIFS_12h_sp = AIFS_12h[:, :, 5]
         
-        graphcast_16h_2t = graphcast_16h[:, :, 0]
-        graphcast_16h_2d = graphcast_16h[:, :, 1]
-        graphcast_16h_100u = graphcast_16h[:, :, 2]/3.6
-        graphcast_16h_100v = graphcast_16h[:, :, 3]/3.6
-        graphcast_16h_tp = graphcast_16h[:, :, 4]
-        graphcast_16h_sp = graphcast_16h[:, :, 5]
+        AIFS_13h_2t = AIFS_13h[:, :, 0]
+        AIFS_13h_2d = AIFS_13h[:, :, 1]
+        AIFS_13h_100u = AIFS_13h[:, :, 2]
+        AIFS_13h_100v = AIFS_13h[:, :, 3]
+        AIFS_13h_tp = AIFS_13h[:, :, 4]
+        AIFS_13h_sp = AIFS_13h[:, :, 5]
+        
+        AIFS_14h_2t = AIFS_14h[:, :, 0]
+        AIFS_14h_2d = AIFS_14h[:, :, 1]
+        AIFS_14h_100u = AIFS_14h[:, :, 2]
+        AIFS_14h_100v = AIFS_14h[:, :, 3]
+        AIFS_14h_tp = AIFS_14h[:, :, 4]
+        AIFS_14h_sp = AIFS_14h[:, :, 5]
 
-        graphcast_17h_2t = graphcast_17h[:, :, 0]
-        graphcast_17h_2d = graphcast_17h[:, :, 1]
-        graphcast_17h_100u = graphcast_17h[:, :, 2]/3.6
-        graphcast_17h_100v = graphcast_17h[:, :, 3]/3.6
-        graphcast_17h_tp = graphcast_17h[:, :, 4]
-        graphcast_17h_sp = graphcast_17h[:, :, 5]
+        AIFS_15h_2t = AIFS_15h[:, :, 0]
+        AIFS_15h_2d = AIFS_15h[:, :, 1]
+        AIFS_15h_100u = AIFS_15h[:, :, 2]
+        AIFS_15h_100v = AIFS_15h[:, :, 3]
+        AIFS_15h_tp = AIFS_15h[:, :, 4]
+        AIFS_15h_sp = AIFS_15h[:, :, 5]
         
-        graphcast_18h_2t = graphcast_18h[:, :, 0]
-        graphcast_18h_2d = graphcast_18h[:, :, 1]
-        graphcast_18h_100u = graphcast_18h[:, :, 2]/3.6
-        graphcast_18h_100v = graphcast_18h[:, :, 3]/3.6
-        graphcast_18h_tp = graphcast_18h[:, :, 4]
-        graphcast_18h_sp = graphcast_18h[:, :, 5]
-        
-        graphcast_19h_2t = graphcast_19h[:, :, 0]
-        graphcast_19h_2d = graphcast_19h[:, :, 1]
-        graphcast_19h_100u = graphcast_19h[:, :, 2]/3.6
-        graphcast_19h_100v = graphcast_19h[:, :, 3]/3.6
-        graphcast_19h_tp = graphcast_19h[:, :, 4]
-        graphcast_19h_sp = graphcast_19h[:, :, 5]
-        
-        graphcast_20h_2t = graphcast_20h[:, :, 0]
-        graphcast_20h_2d = graphcast_20h[:, :, 1]
-        graphcast_20h_100u = graphcast_20h[:, :, 2]/3.6
-        graphcast_20h_100v = graphcast_20h[:, :, 3]/3.6
-        graphcast_20h_tp = graphcast_20h[:, :, 4]
-        graphcast_20h_sp = graphcast_20h[:, :, 5]
-        
-        aifs_1h_2t = aifs_1h[:, :, 0]
-        aifs_1h_2d = aifs_1h[:, :, 1]
-        aifs_1h_100u = aifs_1h[:, :, 2]/3.6
-        aifs_1h_100v = aifs_1h[:, :, 3]/3.6
-        aifs_1h_tp = aifs_1h[:, :, 4]
-        aifs_1h_sp = aifs_1h[:, :, 5]
-        
-        aifs_2h_2t = aifs_2h[:, :, 0]
-        aifs_2h_2d = aifs_2h[:, :, 1]
-        aifs_2h_100u = aifs_2h[:, :, 2]/3.6
-        aifs_2h_100v = aifs_2h[:, :, 3]/3.6
-        aifs_2h_tp = aifs_2h[:, :, 4]
-        aifs_2h_sp = aifs_2h[:, :, 5]
-        
-        aifs_3h_2t = aifs_3h[:, :, 0]
-        aifs_3h_2d = aifs_3h[:, :, 1]
-        aifs_3h_100u = aifs_3h[:, :, 2]/3.6
-        aifs_3h_100v = aifs_3h[:, :, 3]/3.6
-        aifs_3h_tp = aifs_3h[:, :, 4]
-        aifs_3h_sp = aifs_3h[:, :, 5]
-        
-        aifs_4h_2t = aifs_4h[:, :, 0]
-        aifs_4h_2d = aifs_4h[:, :, 1]
-        aifs_4h_100u = aifs_4h[:, :, 2]/3.6
-        aifs_4h_100v = aifs_4h[:, :, 3]/3.6
-        aifs_4h_tp = aifs_4h[:, :, 4]
-        aifs_4h_sp = aifs_4h[:, :, 5]
-        
-        aifs_5h_2t = aifs_5h[:, :, 0]
-        aifs_5h_2d = aifs_5h[:, :, 1]
-        aifs_5h_100u = aifs_5h[:, :, 2]/3.6
-        aifs_5h_100v = aifs_5h[:, :, 3]/3.6
-        aifs_5h_tp = aifs_5h[:, :, 4]
-        aifs_5h_sp = aifs_5h[:, :, 5]
 
-        aifs_6h_2t = aifs_6h[:, :, 0]
-        aifs_6h_2d = aifs_6h[:, :, 1]
-        aifs_6h_100u = aifs_6h[:, :, 2]/3.6
-        aifs_6h_100v = aifs_6h[:, :, 3]/3.6
-        aifs_6h_tp = aifs_6h[:, :, 4]
-        aifs_6h_sp = aifs_6h[:, :, 5]
+        AIFS_16h_2t = AIFS_16h[:, :, 0]
+        AIFS_16h_2d = AIFS_16h[:, :, 1]
+        AIFS_16h_100u = AIFS_16h[:, :, 2]
+        AIFS_16h_100v = AIFS_16h[:, :, 3]
+        AIFS_16h_tp = AIFS_16h[:, :, 4]
+        AIFS_16h_sp = AIFS_16h[:, :, 5]
         
-        aifs_7h_2t = aifs_7h[:, :, 0]
-        aifs_7h_2d = aifs_7h[:, :, 1]
-        aifs_7h_100u = aifs_7h[:, :, 2]/3.6
-        aifs_7h_100v = aifs_7h[:, :, 3]/3.6
-        aifs_7h_tp = aifs_7h[:, :, 4]
-        aifs_7h_sp = aifs_7h[:, :, 5]
+        AIFS_17h_2t = AIFS_17h[:, :, 0]
+        AIFS_17h_2d = AIFS_17h[:, :, 1]
+        AIFS_17h_100u = AIFS_17h[:, :, 2]
+        AIFS_17h_100v = AIFS_17h[:, :, 3]
+        AIFS_17h_tp = AIFS_17h[:, :, 4]
+        AIFS_17h_sp = AIFS_17h[:, :, 5]
         
-        aifs_8h_2t = aifs_8h[:, :, 0]
-        aifs_8h_2d = aifs_8h[:, :, 1]
-        aifs_8h_100u = aifs_8h[:, :, 2]/3.6
-        aifs_8h_100v = aifs_8h[:, :, 3]/3.6
-        aifs_8h_tp = aifs_8h[:, :, 4]
-        aifs_8h_sp = aifs_8h[:, :, 5]
+        AIFS_18h_2t = AIFS_18h[:, :, 0]
+        AIFS_18h_2d = AIFS_18h[:, :, 1]
+        AIFS_18h_100u = AIFS_18h[:, :, 2]
+        AIFS_18h_100v = AIFS_18h[:, :, 3]
+        AIFS_18h_tp = AIFS_18h[:, :, 4]
+        AIFS_18h_sp = AIFS_18h[:, :, 5]
         
-        aifs_9h_2t = aifs_9h[:, :, 0]
-        aifs_9h_2d = aifs_9h[:, :, 1]
-        aifs_9h_100u = aifs_9h[:, :, 2]/3.6
-        aifs_9h_100v = aifs_9h[:, :, 3]/3.6
-        aifs_9h_tp = aifs_9h[:, :, 4]
-        aifs_9h_sp = aifs_9h[:, :, 5]
+        AIFS_19h_2t = AIFS_19h[:, :, 0]
+        AIFS_19h_2d = AIFS_19h[:, :, 1]
+        AIFS_19h_100u = AIFS_19h[:, :, 2]
+        AIFS_19h_100v = AIFS_19h[:, :, 3]
+        AIFS_19h_tp = AIFS_19h[:, :, 4]
+        AIFS_19h_sp = AIFS_19h[:, :, 5]
         
-        aifs_10h_2t = aifs_10h[:, :, 0]
-        aifs_10h_2d = aifs_10h[:, :, 1]
-        aifs_10h_100u = aifs_10h[:, :, 2]/3.6
-        aifs_10h_100v = aifs_10h[:, :, 3]/3.6
-        aifs_10h_tp = aifs_10h[:, :, 4]
-        aifs_10h_sp = aifs_10h[:, :, 5]
-        
-        aifs_11h_2t = aifs_11h[:, :, 0]
-        aifs_11h_2d = aifs_11h[:, :, 1]
-        aifs_11h_100u = aifs_11h[:, :, 2]/3.6
-        aifs_11h_100v = aifs_11h[:, :, 3]/3.6
-        aifs_11h_tp = aifs_11h[:, :, 4]
-        aifs_11h_sp = aifs_11h[:, :, 5]
-        
-        aifs_12h_2t = aifs_12h[:, :, 0]
-        aifs_12h_2d = aifs_12h[:, :, 1]
-        aifs_12h_100u = aifs_12h[:, :, 2]/3.6
-        aifs_12h_100v = aifs_12h[:, :, 3]/3.6
-        aifs_12h_tp = aifs_12h[:, :, 4]
-        aifs_12h_sp = aifs_12h[:, :, 5]
-        
-        aifs_13h_2t = aifs_13h[:, :, 0]
-        aifs_13h_2d = aifs_13h[:, :, 1]
-        aifs_13h_100u = aifs_13h[:, :, 2]/3.6
-        aifs_13h_100v = aifs_13h[:, :, 3]/3.6
-        aifs_13h_tp = aifs_13h[:, :, 4]
-        aifs_13h_sp = aifs_13h[:, :, 5]
-        
-        aifs_14h_2t = aifs_14h[:, :, 0]
-        aifs_14h_2d = aifs_14h[:, :, 1]
-        aifs_14h_100u = aifs_14h[:, :, 2]/3.6
-        aifs_14h_100v = aifs_14h[:, :, 3]/3.6
-        aifs_14h_tp = aifs_14h[:, :, 4]
-        aifs_14h_sp = aifs_14h[:, :, 5]
-        
-        aifs_15h_2t = aifs_15h[:, :, 0]
-        aifs_15h_2d = aifs_15h[:, :, 1]
-        aifs_15h_100u = aifs_15h[:, :, 2]/3.6
-        aifs_15h_100v = aifs_15h[:, :, 3]/3.6
-        aifs_15h_tp = aifs_15h[:, :, 4]
-        aifs_15h_sp = aifs_15h[:, :, 5]
-        
-        aifs_16h_2t = aifs_16h[:, :, 0]
-        aifs_16h_2d = aifs_16h[:, :, 1]
-        aifs_16h_100u = aifs_16h[:, :, 2]/3.6
-        aifs_16h_100v = aifs_16h[:, :, 3]/3.6
-        aifs_16h_tp = aifs_16h[:, :, 4]
-        aifs_16h_sp = aifs_16h[:, :, 5]
-        
-        aifs_17h_2t = aifs_17h[:, :, 0]
-        aifs_17h_2d = aifs_17h[:, :, 1]
-        aifs_17h_100u = aifs_17h[:, :, 2]/3.6
-        aifs_17h_100v = aifs_17h[:, :, 3]/3.6
-        aifs_17h_tp = aifs_17h[:, :, 4]
-        aifs_17h_sp = aifs_17h[:, :, 5]
-        
-        aifs_18h_2t = aifs_18h[:, :, 0]
-        aifs_18h_2d = aifs_18h[:, :, 1]
-        aifs_18h_100u = aifs_18h[:, :, 2]/3.6
-        aifs_18h_100v = aifs_18h[:, :, 3]/3.6
-        aifs_18h_tp = aifs_18h[:, :, 4]
-        aifs_18h_sp = aifs_18h[:, :, 5]
-        
-        aifs_19h_2t = aifs_19h[:, :, 0]
-        aifs_19h_2d = aifs_19h[:, :, 1]
-        aifs_19h_100u = aifs_19h[:, :, 2]/3.6
-        aifs_19h_100v = aifs_19h[:, :, 3]/3.6
-        aifs_19h_tp = aifs_19h[:, :, 4]
-        aifs_19h_sp = aifs_19h[:, :, 5]
-        
-        aifs_20h_2t = aifs_20h[:, :, 0]
-        aifs_20h_2d = aifs_20h[:, :, 1]
-        aifs_20h_100u = aifs_20h[:, :, 2]/3.6
-        aifs_20h_100v = aifs_20h[:, :, 3]/3.6
-        aifs_20h_tp = aifs_20h[:, :, 4]
-        aifs_20h_sp = aifs_20h[:, :, 5]
+        AIFS_20h_2t = AIFS_20h[:, :, 0]
+        AIFS_20h_2d = AIFS_20h[:, :, 1]
+        AIFS_20h_100u = AIFS_20h[:, :, 2]
+        AIFS_20h_100v = AIFS_20h[:, :, 3]
+        AIFS_20h_tp = AIFS_20h[:, :, 4]
+        AIFS_20h_sp = AIFS_20h[:, :, 5]
 
+        AIFS_21h_2t = AIFS_21h[:, :, 0]
+        AIFS_21h_2d = AIFS_21h[:, :, 1]
+        AIFS_21h_100u = AIFS_21h[:, :, 2]
+        AIFS_21h_100v = AIFS_21h[:, :, 3]
+        AIFS_21h_tp = AIFS_21h[:, :, 4]
+        AIFS_21h_sp = AIFS_21h[:, :, 5]
+        
+        AIFS_22h_2t = AIFS_22h[:, :, 0]
+        AIFS_22h_2d = AIFS_22h[:, :, 1]
+        AIFS_22h_100u = AIFS_22h[:, :, 2]
+        AIFS_22h_100v = AIFS_22h[:, :, 3]
+        AIFS_22h_tp = AIFS_22h[:, :, 4]
+        AIFS_22h_sp = AIFS_22h[:, :, 5]
+        
+        AIFS_23h_2t = AIFS_23h[:, :, 0]
+        AIFS_23h_2d = AIFS_23h[:, :, 1]
+        AIFS_23h_100u = AIFS_23h[:, :, 2]
+        AIFS_23h_100v = AIFS_23h[:, :, 3]
+        AIFS_23h_tp = AIFS_23h[:, :, 4]
+        AIFS_23h_sp = AIFS_23h[:, :, 5]
+        
+        AIFS_24h_2t = AIFS_24h[:, :, 0]
+        AIFS_24h_2d = AIFS_24h[:, :, 1]
+        AIFS_24h_100u = AIFS_24h[:, :, 2]
+        AIFS_24h_100v = AIFS_24h[:, :, 3]
+        AIFS_24h_tp = AIFS_24h[:, :, 4]
+        AIFS_24h_sp = AIFS_24h[:, :, 5]
+        
+        CMA_1h_2t = CMA_1h[:,:,0]
+        CMA_1h_2d = CMA_1h[:,:,1]
+        CMA_1h_100u = CMA_1h[:,:,2]
+        CMA_1h_100v = CMA_1h[:,:,3]
+        CMA_1h_tp = CMA_1h[:,:,4]
+        CMA_1h_sp = CMA_1h[:,:,5]
+        
+        CMA_2h_2t = CMA_2h[:,:,0]
+        CMA_2h_2d = CMA_2h[:,:,1]
+        CMA_2h_100u = CMA_2h[:,:,2]
+        CMA_2h_100v = CMA_2h[:,:,3]  
+        CMA_2h_tp = CMA_2h[:,:,4]
+        CMA_2h_sp = CMA_2h[:,:,5]
+        
+        CMA_3h_2t = CMA_3h[:,:,0]
+        CMA_3h_2d = CMA_3h[:,:,1]
+        CMA_3h_100u = CMA_3h[:,:,2]
+        CMA_3h_100v = CMA_3h[:,:,3]
+        CMA_3h_tp = CMA_3h[:,:,4]
+        CMA_3h_sp = CMA_3h[:,:,5]
+
+        CMA_4h_2t = CMA_4h[:,:,0]
+        CMA_4h_2d = CMA_4h[:,:,1]
+        CMA_4h_100u = CMA_4h[:,:,2]
+        CMA_4h_100v = CMA_4h[:,:,3]
+        CMA_4h_tp = CMA_4h[:,:,4]
+        CMA_4h_sp = CMA_4h[:,:,5]
+        
+        CMA_5h_2t = CMA_5h[:,:,0]
+        CMA_5h_2d = CMA_5h[:,:,1]
+        CMA_5h_100u = CMA_5h[:,:,2]
+        CMA_5h_100v = CMA_5h[:,:,3]
+        CMA_5h_tp = CMA_5h[:,:,4]
+        CMA_5h_sp = CMA_5h[:,:,5]
+        
+        CMA_6h_2t = CMA_6h[:,:,0]
+        CMA_6h_2d = CMA_6h[:,:,1]
+        CMA_6h_100u = CMA_6h[:,:,2]
+        CMA_6h_100v = CMA_6h[:,:,3]
+        CMA_6h_tp = CMA_6h[:,:,4]
+        CMA_6h_sp = CMA_6h[:,:,5]
+        
+        CMA_7h_2t = CMA_7h[:,:,0]
+        CMA_7h_2d = CMA_7h[:,:,1]
+        CMA_7h_100u = CMA_7h[:,:,2]
+        CMA_7h_100v = CMA_7h[:,:,3]
+        CMA_7h_tp = CMA_7h[:,:,4]
+        CMA_7h_sp = CMA_7h[:,:,5]
+        
+        CMA_8h_2t = CMA_8h[:,:,0]
+        CMA_8h_2d = CMA_8h[:,:,1]
+        CMA_8h_100u = CMA_8h[:,:,2]
+        CMA_8h_100v = CMA_8h[:,:,3]
+        CMA_8h_tp = CMA_8h[:,:,4]
+        CMA_8h_sp = CMA_8h[:,:,5]
+        
+        CMA_9h_2t = CMA_9h[:,:,0]
+        CMA_9h_2d = CMA_9h[:,:,1]
+        CMA_9h_100u = CMA_9h[:,:,2]
+        CMA_9h_100v = CMA_9h[:,:,3]
+        CMA_9h_tp = CMA_9h[:,:,4]
+        CMA_9h_sp = CMA_9h[:,:,5]
+        
+        CMA_10h_2t = CMA_10h[:,:,0]
+        CMA_10h_2d = CMA_10h[:,:,1]
+        CMA_10h_100u = CMA_10h[:,:,2]
+        CMA_10h_100v = CMA_10h[:,:,3]
+        CMA_10h_tp = CMA_10h[:,:,4]
+        CMA_10h_sp = CMA_10h[:,:,5]
+        
+        CMA_11h_2t = CMA_11h[:,:,0]
+        CMA_11h_2d = CMA_11h[:,:,1]
+        CMA_11h_100u = CMA_11h[:,:,2]
+        CMA_11h_100v = CMA_11h[:,:,3]
+        CMA_11h_tp = CMA_11h[:,:,4]
+        CMA_11h_sp = CMA_11h[:,:,5]
+        
+        CMA_12h_2t = CMA_12h[:,:,0]
+        CMA_12h_2d = CMA_12h[:,:,1]
+        CMA_12h_100u = CMA_12h[:,:,2]
+        CMA_12h_100v = CMA_12h[:,:,3]
+        CMA_12h_tp = CMA_12h[:,:,4]
+        CMA_12h_sp = CMA_12h[:,:,5]
+        
+        CMA_13h_2t = CMA_13h[:,:,0]
+        CMA_13h_2d = CMA_13h[:,:,1]
+        CMA_13h_100u = CMA_13h[:,:,2]
+        CMA_13h_100v = CMA_13h[:,:,3]
+        CMA_13h_tp = CMA_13h[:,:,4]
+        CMA_13h_sp = CMA_13h[:,:,5]
+        
+        CMA_14h_2t = CMA_14h[:,:,0]
+        CMA_14h_2d = CMA_14h[:,:,1]
+        CMA_14h_100u = CMA_14h[:,:,2]
+        CMA_14h_100v = CMA_14h[:,:,3]
+        CMA_14h_tp = CMA_14h[:,:,4]
+        CMA_14h_sp = CMA_14h[:,:,5]
+        
+        CMA_15h_2t = CMA_15h[:,:,0]
+        CMA_15h_2d = CMA_15h[:,:,1]
+        CMA_15h_100u = CMA_15h[:,:,2]
+        CMA_15h_100v = CMA_15h[:,:,3]
+        CMA_15h_tp = CMA_15h[:,:,4]
+        CMA_15h_sp = CMA_15h[:,:,5]
+        
+        CMA_16h_2t = CMA_16h[:,:,0]
+        CMA_16h_2d = CMA_16h[:,:,1]
+        CMA_16h_100u = CMA_16h[:,:,2]
+        CMA_16h_100v = CMA_16h[:,:,3]
+        CMA_16h_tp = CMA_16h[:,:,4]
+        CMA_16h_sp = CMA_16h[:,:,5]
+        
+        CMA_17h_2t = CMA_17h[:,:,0]
+        CMA_17h_2d = CMA_17h[:,:,1]
+        CMA_17h_100u = CMA_17h[:,:,2]
+        CMA_17h_100v = CMA_17h[:,:,3]
+        CMA_17h_tp = CMA_17h[:,:,4]
+        CMA_17h_sp = CMA_17h[:,:,5]
+        
+        CMA_18h_2t = CMA_18h[:,:,0]
+        CMA_18h_2d = CMA_18h[:,:,1]
+        CMA_18h_100u = CMA_18h[:,:,2]
+        CMA_18h_100v = CMA_18h[:,:,3]
+        CMA_18h_tp = CMA_18h[:,:,4]
+        CMA_18h_sp = CMA_18h[:,:,5]
+        
+        CMA_19h_2t = CMA_19h[:,:,0]
+        CMA_19h_2d = CMA_19h[:,:,1]
+        CMA_19h_100u = CMA_19h[:,:,2]
+        CMA_19h_100v = CMA_19h[:,:,3]
+        CMA_19h_tp = CMA_19h[:,:,4]
+        CMA_19h_sp = CMA_19h[:,:,5]
+        
+        CMA_20h_2t = CMA_20h[:,:,0]
+        CMA_20h_2d = CMA_20h[:,:,1]
+        CMA_20h_100u = CMA_20h[:,:,2]
+        CMA_20h_100v = CMA_20h[:,:,3]
+        CMA_20h_tp = CMA_20h[:,:,4]
+        CMA_20h_sp = CMA_20h[:,:,5]
+
+        CMA_21h_2t = CMA_21h[:,:,0]
+        CMA_21h_2d = CMA_21h[:,:,1]
+        CMA_21h_100u = CMA_21h[:,:,2]
+        CMA_21h_100v = CMA_21h[:,:,3]
+        CMA_21h_tp = CMA_21h[:,:,4]
+        CMA_21h_sp = CMA_21h[:,:,5]
+        
+        CMA_22h_2t = CMA_22h[:,:,0]
+        CMA_22h_2d = CMA_22h[:,:,1]
+        CMA_22h_100u = CMA_22h[:,:,2]
+        CMA_22h_100v = CMA_22h[:,:,3]
+        CMA_22h_tp = CMA_22h[:,:,4]
+        CMA_22h_sp = CMA_22h[:,:,5]
+        
+        CMA_23h_2t = CMA_23h[:,:,0]
+        CMA_23h_2d = CMA_23h[:,:,1]
+        CMA_23h_100u = CMA_23h[:,:,2]
+        CMA_23h_100v = CMA_23h[:,:,3]
+        CMA_23h_tp = CMA_23h[:,:,4]
+        CMA_23h_sp = CMA_23h[:,:,5]
+        
+        CMA_24h_2t = CMA_24h[:,:,0]
+        CMA_24h_2d = CMA_24h[:,:,1]
+        CMA_24h_100u = CMA_24h[:,:,2]
+        CMA_24h_100v = CMA_24h[:,:,3]
+        CMA_24h_tp = CMA_24h[:,:,4]
+        CMA_24h_sp = CMA_24h[:,:,5]
+        
         era5_1h_2t = era5_1h[:, :, 0]
         era5_1h_2d = era5_1h[:, :, 1]
-        era5_1h_100u = era5_1h[:, :, 2]/3.6
-        era5_1h_100v = era5_1h[:, :, 3]/3.6
+        era5_1h_100u = era5_1h[:, :, 2]
+        era5_1h_100v = era5_1h[:, :, 3]
         era5_1h_tp = era5_1h[:, :, 4]
         era5_1h_sp = era5_1h[:, :, 5]
         
         era5_2h_2t = era5_2h[:, :, 0]
         era5_2h_2d = era5_2h[:, :, 1]
-        era5_2h_100u = era5_2h[:, :, 2]/3.6
-        era5_2h_100v = era5_2h[:, :, 3]/3.6
+        era5_2h_100u = era5_2h[:, :, 2]
+        era5_2h_100v = era5_2h[:, :, 3]
         era5_2h_tp = era5_2h[:, :, 4]
         era5_2h_sp = era5_2h[:, :, 5]
 
         era5_3h_2t = era5_3h[:, :, 0]
         era5_3h_2d = era5_3h[:, :, 1]
-        era5_3h_100u = era5_3h[:, :, 2]/3.6
-        era5_3h_100v = era5_3h[:, :, 3]/3.6
+        era5_3h_100u = era5_3h[:, :, 2]
+        era5_3h_100v = era5_3h[:, :, 3]
         era5_3h_tp = era5_3h[:, :, 4]
         era5_3h_sp = era5_3h[:, :, 5]
         
 
         era5_4h_2t = era5_4h[:, :, 0]
         era5_4h_2d = era5_4h[:, :, 1]
-        era5_4h_100u = era5_4h[:, :, 2]/3.6
-        era5_4h_100v = era5_4h[:, :, 3]/3.6
+        era5_4h_100u = era5_4h[:, :, 2]
+        era5_4h_100v = era5_4h[:, :, 3]
         era5_4h_tp = era5_4h[:, :, 4]
         era5_4h_sp = era5_4h[:, :, 5]
         
 
         era5_5h_2t = era5_5h[:, :, 0]
         era5_5h_2d = era5_5h[:, :, 1]
-        era5_5h_100u = era5_5h[:, :, 2]/3.6
-        era5_5h_100v = era5_5h[:, :, 3]/3.6
+        era5_5h_100u = era5_5h[:, :, 2]
+        era5_5h_100v = era5_5h[:, :, 3]
         era5_5h_tp = era5_5h[:, :, 4]
         era5_5h_sp = era5_5h[:, :, 5]
         
 
         era5_6h_2t = era5_6h[:, :, 0]
         era5_6h_2d = era5_6h[:, :, 1]
-        era5_6h_100u = era5_6h[:, :, 2]/3.6
-        era5_6h_100v = era5_6h[:, :, 3]/3.6
+        era5_6h_100u = era5_6h[:, :, 2]
+        era5_6h_100v = era5_6h[:, :, 3]
         era5_6h_tp = era5_6h[:, :, 4]
         era5_6h_sp = era5_6h[:, :, 5]
 
         era5_7h_2t = era5_7h[:, :, 0]
         era5_7h_2d = era5_7h[:, :, 1]
-        era5_7h_100u = era5_7h[:, :, 2]/3.6
-        era5_7h_100v = era5_7h[:, :, 3]/3.6
+        era5_7h_100u = era5_7h[:, :, 2]
+        era5_7h_100v = era5_7h[:, :, 3]
         era5_7h_tp = era5_7h[:, :, 4]
         era5_7h_sp = era5_7h[:, :, 5]
         
         
         era5_8h_2t = era5_8h[:, :, 0]
         era5_8h_2d = era5_8h[:, :, 1]
-        era5_8h_100u = era5_8h[:, :, 2]/3.6
-        era5_8h_100v = era5_8h[:, :, 3]/3.6
+        era5_8h_100u = era5_8h[:, :, 2]
+        era5_8h_100v = era5_8h[:, :, 3]
         era5_8h_tp = era5_8h[:, :, 4]
         era5_8h_sp = era5_8h[:, :, 5]
         
         
         era5_9h_2t = era5_9h[:, :, 0]
         era5_9h_2d = era5_9h[:, :, 1]
-        era5_9h_100u = era5_9h[:, :, 2]/3.6
-        era5_9h_100v = era5_9h[:, :, 3]/3.6
+        era5_9h_100u = era5_9h[:, :, 2]
+        era5_9h_100v = era5_9h[:, :, 3]
         era5_9h_tp = era5_9h[:, :, 4]
         era5_9h_sp = era5_9h[:, :, 5]
 
         era5_10h_2t = era5_10h[:, :, 0]
         era5_10h_2d = era5_10h[:, :, 1]
-        era5_10h_100u = era5_10h[:, :, 2]/3.6
-        era5_10h_100v = era5_10h[:, :, 3]/3.6
+        era5_10h_100u = era5_10h[:, :, 2]
+        era5_10h_100v = era5_10h[:, :, 3]
         era5_10h_tp = era5_10h[:, :, 4]
         era5_10h_sp = era5_10h[:, :, 5]
         
         era5_11h_2t = era5_11h[:, :, 0]
         era5_11h_2d = era5_11h[:, :, 1]
-        era5_11h_100u = era5_11h[:, :, 2]/3.6
-        era5_11h_100v = era5_11h[:, :, 3]/3.6
+        era5_11h_100u = era5_11h[:, :, 2]
+        era5_11h_100v = era5_11h[:, :, 3]
         era5_11h_tp = era5_11h[:, :, 4]
         era5_11h_sp = era5_11h[:, :, 5]
         
         
         era5_12h_2t = era5_12h[:, :, 0]
         era5_12h_2d = era5_12h[:, :, 1]
-        era5_12h_100u = era5_12h[:, :, 2]/3.6
-        era5_12h_100v = era5_12h[:, :, 3]/3.6
+        era5_12h_100u = era5_12h[:, :, 2]
+        era5_12h_100v = era5_12h[:, :, 3]
         era5_12h_tp = era5_12h[:, :, 4]
         era5_12h_sp = era5_12h[:, :, 5]
         
         
         era5_13h_2t = era5_13h[:, :, 0]
         era5_13h_2d = era5_13h[:, :, 1]
-        era5_13h_100u = era5_13h[:, :, 2]/3.6
-        era5_13h_100v = era5_13h[:, :, 3]/3.6
+        era5_13h_100u = era5_13h[:, :, 2]
+        era5_13h_100v = era5_13h[:, :, 3]
         era5_13h_tp = era5_13h[:, :, 4]
         era5_13h_sp = era5_13h[:, :, 5]
         
         
         era5_14h_2t = era5_14h[:, :, 0]
         era5_14h_2d = era5_14h[:, :, 1]
-        era5_14h_100u = era5_14h[:, :, 2]/3.6
-        era5_14h_100v = era5_14h[:, :, 3]/3.6
+        era5_14h_100u = era5_14h[:, :, 2]
+        era5_14h_100v = era5_14h[:, :, 3]
         era5_14h_tp = era5_14h[:, :, 4]
         era5_14h_sp = era5_14h[:, :, 5]
         
@@ -1239,57 +1401,86 @@ def process_rar_file(rar_path, data_dir, result_dir):
         
         era5_15h_2t = era5_15h[:, :, 0]
         era5_15h_2d = era5_15h[:, :, 1]
-        era5_15h_100u = era5_15h[:, :, 2]/3.6
-        era5_15h_100v = era5_15h[:, :, 3]/3.6
+        era5_15h_100u = era5_15h[:, :, 2]
+        era5_15h_100v = era5_15h[:, :, 3]
         era5_15h_tp = era5_15h[:, :, 4]
         era5_15h_sp = era5_15h[:, :, 5]
 
 
         era5_16h_2t = era5_16h[:, :, 0]
         era5_16h_2d = era5_16h[:, :, 1]
-        era5_16h_100u = era5_16h[:, :, 2]/3.6
-        era5_16h_100v = era5_16h[:, :, 3]/3.6
+        era5_16h_100u = era5_16h[:, :, 2]
+        era5_16h_100v = era5_16h[:, :, 3]
         era5_16h_tp = era5_16h[:, :, 4]
         era5_16h_sp = era5_16h[:, :, 5]
 
         era5_17h_2t = era5_17h[:, :, 0]
         era5_17h_2d = era5_17h[:, :, 1]
-        era5_17h_100u = era5_17h[:, :, 2]/3.6
-        era5_17h_100v = era5_17h[:, :, 3]/3.6
+        era5_17h_100u = era5_17h[:, :, 2]
+        era5_17h_100v = era5_17h[:, :, 3]
         era5_17h_tp = era5_17h[:, :, 4]
         era5_17h_sp = era5_17h[:, :, 5]
         
         
         era5_18h_2t = era5_18h[:, :, 0]
         era5_18h_2d = era5_18h[:, :, 1]
-        era5_18h_100u = era5_18h[:, :, 2]/3.6
-        era5_18h_100v = era5_18h[:, :, 3]/3.6
+        era5_18h_100u = era5_18h[:, :, 2]
+        era5_18h_100v = era5_18h[:, :, 3]
         era5_18h_tp = era5_18h[:, :, 4]
         era5_18h_sp = era5_18h[:, :, 5]
         
         era5_19h_2t = era5_19h[:, :, 0]
         era5_19h_2d = era5_19h[:, :, 1]
-        era5_19h_100u = era5_19h[:, :, 2]/3.6
-        era5_19h_100v = era5_19h[:, :, 3]/3.6
+        era5_19h_100u = era5_19h[:, :, 2]
+        era5_19h_100v = era5_19h[:, :, 3]
         era5_19h_tp = era5_19h[:, :, 4]
         era5_19h_sp = era5_19h[:, :, 5]
         
         era5_20h_2t = era5_20h[:, :, 0]
         era5_20h_2d = era5_20h[:, :, 1]
-        era5_20h_100u = era5_20h[:, :, 2]/3.6
-        era5_20h_100v = era5_20h[:, :, 3]/3.6
+        era5_20h_100u = era5_20h[:, :, 2]
+        era5_20h_100v = era5_20h[:, :, 3]
         era5_20h_tp = era5_20h[:, :, 4]
         era5_20h_sp = era5_20h[:, :, 5]
         
+        era5_21h_2t = era5_21h[:, :, 0]
+        era5_21h_2d = era5_21h[:, :, 1]
+        era5_21h_100u = era5_21h[:, :, 2]
+        era5_21h_100v = era5_21h[:, :, 3]
+        era5_21h_tp = era5_21h[:, :, 4]
+        era5_21h_sp = era5_21h[:, :, 5]
+        
+        era5_22h_2t = era5_22h[:, :, 0]
+        era5_22h_2d = era5_22h[:, :, 1]
+        era5_22h_100u = era5_22h[:, :, 2]
+        era5_22h_100v = era5_22h[:, :, 3]
+        era5_22h_tp = era5_22h[:, :, 4]
+        era5_22h_sp = era5_22h[:, :, 5]
+        
+        era5_23h_2t = era5_23h[:, :, 0]
+        era5_23h_2d = era5_23h[:, :, 1]
+        era5_23h_100u = era5_23h[:, :, 2]
+        era5_23h_100v = era5_23h[:, :, 3]
+        era5_23h_tp = era5_23h[:, :, 4]
+        era5_23h_sp = era5_23h[:, :, 5]
+        
+        era5_24h_2t = era5_24h[:, :, 0]
+        era5_24h_2d = era5_24h[:, :, 1]
+        era5_24h_100u = era5_24h[:, :, 2]
+        era5_24h_100v = era5_24h[:, :, 3]
+        era5_24h_tp = era5_24h[:, :, 4]
+        era5_24h_sp = era5_24h[:, :, 5]
+        
+
         # Group features by hour and create one PNG per hour
-        # Hours: 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h, 14h, 15h, 16h, 17h, 18h, 19h, 20h
+        # Hours: 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h, 14h, 15h, 16h, 17h, 18h, 19h, 20h, 21h, 22h, 23h, 24h
         hours_data = {
             '1h': {
                 'best_match': [best_match_1h_2t, best_match_1h_2d, best_match_1h_100u, best_match_1h_100v, best_match_1h_tp, best_match_1h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_1h_2t, ecmwf_ifs_1h_2d, ecmwf_ifs_1h_100u, ecmwf_ifs_1h_100v, ecmwf_ifs_1h_tp, ecmwf_ifs_1h_sp],
                 'gfs_global': [gfs_global_1h_2t, gfs_global_1h_2d, gfs_global_1h_100u, gfs_global_1h_100v, gfs_global_1h_tp, gfs_global_1h_sp],
-                'graphcast': [graphcast_1h_2t, graphcast_1h_2d, graphcast_1h_100u, graphcast_1h_100v, graphcast_1h_tp, graphcast_1h_sp],
-                'aifs': [aifs_1h_2t, aifs_1h_2d, aifs_1h_100u, aifs_1h_100v, aifs_1h_tp, aifs_1h_sp],
+                'AIFS': [AIFS_1h_2t, AIFS_1h_2d, AIFS_1h_100u, AIFS_1h_100v, AIFS_1h_tp, AIFS_1h_sp],
+                'CMA': [CMA_1h_2t, CMA_1h_2d, CMA_1h_100u, CMA_1h_100v, CMA_1h_tp, CMA_1h_sp],
                 'era5': [era5_1h_2t, era5_1h_2d, era5_1h_100u, era5_1h_100v, era5_1h_tp, era5_1h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1297,8 +1488,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_2h_2t, best_match_2h_2d, best_match_2h_100u, best_match_2h_100v, best_match_2h_tp, best_match_2h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_2h_2t, ecmwf_ifs_2h_2d, ecmwf_ifs_2h_100u, ecmwf_ifs_2h_100v, ecmwf_ifs_2h_tp, ecmwf_ifs_2h_sp],
                 'gfs_global': [gfs_global_2h_2t, gfs_global_2h_2d, gfs_global_2h_100u, gfs_global_2h_100v, gfs_global_2h_tp, gfs_global_2h_sp],
-                'graphcast': [graphcast_2h_2t, graphcast_2h_2d, graphcast_2h_100u, graphcast_2h_100v, graphcast_2h_tp, graphcast_2h_sp],
-                'aifs': [aifs_2h_2t, aifs_2h_2d, aifs_2h_100u, aifs_2h_100v, aifs_2h_tp, aifs_2h_sp],
+                'AIFS': [AIFS_2h_2t, AIFS_2h_2d, AIFS_2h_100u, AIFS_2h_100v, AIFS_2h_tp, AIFS_2h_sp],
+                'CMA': [CMA_2h_2t, CMA_2h_2d, CMA_2h_100u, CMA_2h_100v, CMA_2h_tp, CMA_2h_sp],
                 'era5': [era5_2h_2t, era5_2h_2d, era5_2h_100u, era5_2h_100v, era5_2h_tp, era5_2h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1306,8 +1497,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_3h_2t, best_match_3h_2d, best_match_3h_100u, best_match_3h_100v, best_match_3h_tp, best_match_3h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_3h_2t, ecmwf_ifs_3h_2d, ecmwf_ifs_3h_100u, ecmwf_ifs_3h_100v, ecmwf_ifs_3h_tp, ecmwf_ifs_3h_sp],
                 'gfs_global': [gfs_global_3h_2t, gfs_global_3h_2d, gfs_global_3h_100u, gfs_global_3h_100v, gfs_global_3h_tp, gfs_global_3h_sp],
-                'graphcast': [graphcast_3h_2t, graphcast_3h_2d, graphcast_3h_100u, graphcast_3h_100v, graphcast_3h_tp, graphcast_3h_sp],
-                'aifs': [aifs_3h_2t, aifs_3h_2d, aifs_3h_100u, aifs_3h_100v, aifs_3h_tp, aifs_3h_sp],
+                'AIFS': [AIFS_3h_2t, AIFS_3h_2d, AIFS_3h_100u, AIFS_3h_100v, AIFS_3h_tp, AIFS_3h_sp],
+                'CMA': [CMA_3h_2t, CMA_3h_2d, CMA_3h_100u, CMA_3h_100v, CMA_3h_tp, CMA_3h_sp],
                 'era5': [era5_3h_2t, era5_3h_2d, era5_3h_100u, era5_3h_100v, era5_3h_tp, era5_3h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1315,8 +1506,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_4h_2t, best_match_4h_2d, best_match_4h_100u, best_match_4h_100v, best_match_4h_tp, best_match_4h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_4h_2t, ecmwf_ifs_4h_2d, ecmwf_ifs_4h_100u, ecmwf_ifs_4h_100v, ecmwf_ifs_4h_tp, ecmwf_ifs_4h_sp],
                 'gfs_global': [gfs_global_4h_2t, gfs_global_4h_2d, gfs_global_4h_100u, gfs_global_4h_100v, gfs_global_4h_tp, gfs_global_4h_sp],
-                'graphcast': [graphcast_4h_2t, graphcast_4h_2d, graphcast_4h_100u, graphcast_4h_100v, graphcast_4h_tp, graphcast_4h_sp],
-                'aifs': [aifs_4h_2t, aifs_4h_2d, aifs_4h_100u, aifs_4h_100v, aifs_4h_tp, aifs_4h_sp],
+                'AIFS': [AIFS_4h_2t, AIFS_4h_2d, AIFS_4h_100u, AIFS_4h_100v, AIFS_4h_tp, AIFS_4h_sp],
+                'CMA': [CMA_4h_2t, CMA_4h_2d, CMA_4h_100u, CMA_4h_100v, CMA_4h_tp, CMA_4h_sp],
                 'era5': [era5_4h_2t, era5_4h_2d, era5_4h_100u, era5_4h_100v, era5_4h_tp, era5_4h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1324,8 +1515,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_5h_2t, best_match_5h_2d, best_match_5h_100u, best_match_5h_100v, best_match_5h_tp, best_match_5h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_5h_2t, ecmwf_ifs_5h_2d, ecmwf_ifs_5h_100u, ecmwf_ifs_5h_100v, ecmwf_ifs_5h_tp, ecmwf_ifs_5h_sp],
                 'gfs_global': [gfs_global_5h_2t, gfs_global_5h_2d, gfs_global_5h_100u, gfs_global_5h_100v, gfs_global_5h_tp, gfs_global_5h_sp],
-                'graphcast': [graphcast_5h_2t, graphcast_5h_2d, graphcast_5h_100u, graphcast_5h_100v, graphcast_5h_tp, graphcast_5h_sp],
-                'aifs': [aifs_5h_2t, aifs_5h_2d, aifs_5h_100u, aifs_5h_100v, aifs_5h_tp, aifs_5h_sp],
+                'AIFS': [AIFS_5h_2t, AIFS_5h_2d, AIFS_5h_100u, AIFS_5h_100v, AIFS_5h_tp, AIFS_5h_sp],
+                'CMA': [CMA_5h_2t, CMA_5h_2d, CMA_5h_100u, CMA_5h_100v, CMA_5h_tp, CMA_5h_sp],
                 'era5': [era5_5h_2t, era5_5h_2d, era5_5h_100u, era5_5h_100v, era5_5h_tp, era5_5h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1333,8 +1524,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_6h_2t, best_match_6h_2d, best_match_6h_100u, best_match_6h_100v, best_match_6h_tp, best_match_6h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_6h_2t, ecmwf_ifs_6h_2d, ecmwf_ifs_6h_100u, ecmwf_ifs_6h_100v, ecmwf_ifs_6h_tp, ecmwf_ifs_6h_sp],
                 'gfs_global': [gfs_global_6h_2t, gfs_global_6h_2d, gfs_global_6h_100u, gfs_global_6h_100v, gfs_global_6h_tp, gfs_global_6h_sp],
-                'graphcast': [graphcast_6h_2t, graphcast_6h_2d, graphcast_6h_100u, graphcast_6h_100v, graphcast_6h_tp, graphcast_6h_sp],
-                'aifs': [aifs_6h_2t, aifs_6h_2d, aifs_6h_100u, aifs_6h_100v, aifs_6h_tp, aifs_6h_sp],
+                'AIFS': [AIFS_6h_2t, AIFS_6h_2d, AIFS_6h_100u, AIFS_6h_100v, AIFS_6h_tp, AIFS_6h_sp],
+                'CMA': [CMA_6h_2t, CMA_6h_2d, CMA_6h_100u, CMA_6h_100v, CMA_6h_tp, CMA_6h_sp],
                 'era5': [era5_6h_2t, era5_6h_2d, era5_6h_100u, era5_6h_100v, era5_6h_tp, era5_6h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1342,8 +1533,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_7h_2t, best_match_7h_2d, best_match_7h_100u, best_match_7h_100v, best_match_7h_tp, best_match_7h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_7h_2t, ecmwf_ifs_7h_2d, ecmwf_ifs_7h_100u, ecmwf_ifs_7h_100v, ecmwf_ifs_7h_tp, ecmwf_ifs_7h_sp],
                 'gfs_global': [gfs_global_7h_2t, gfs_global_7h_2d, gfs_global_7h_100u, gfs_global_7h_100v, gfs_global_7h_tp, gfs_global_7h_sp],
-                'graphcast': [graphcast_7h_2t, graphcast_7h_2d, graphcast_7h_100u, graphcast_7h_100v, graphcast_7h_tp, graphcast_7h_sp],
-                'aifs': [aifs_7h_2t, aifs_7h_2d, aifs_7h_100u, aifs_7h_100v, aifs_7h_tp, aifs_7h_sp],
+                'AIFS': [AIFS_7h_2t, AIFS_7h_2d, AIFS_7h_100u, AIFS_7h_100v, AIFS_7h_tp, AIFS_7h_sp],
+                'CMA': [CMA_7h_2t, CMA_7h_2d, CMA_7h_100u, CMA_7h_100v, CMA_7h_tp, CMA_7h_sp],
                 'era5': [era5_7h_2t, era5_7h_2d, era5_7h_100u, era5_7h_100v, era5_7h_tp, era5_7h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1351,8 +1542,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_8h_2t, best_match_8h_2d, best_match_8h_100u, best_match_8h_100v, best_match_8h_tp, best_match_8h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_8h_2t, ecmwf_ifs_8h_2d, ecmwf_ifs_8h_100u, ecmwf_ifs_8h_100v, ecmwf_ifs_8h_tp, ecmwf_ifs_8h_sp],
                 'gfs_global': [gfs_global_8h_2t, gfs_global_8h_2d, gfs_global_8h_100u, gfs_global_8h_100v, gfs_global_8h_tp, gfs_global_8h_sp],
-                'graphcast': [graphcast_8h_2t, graphcast_8h_2d, graphcast_8h_100u, graphcast_8h_100v, graphcast_8h_tp, graphcast_8h_sp],
-                'aifs': [aifs_8h_2t, aifs_8h_2d, aifs_8h_100u, aifs_8h_100v, aifs_8h_tp, aifs_8h_sp],
+                'AIFS': [AIFS_8h_2t, AIFS_8h_2d, AIFS_8h_100u, AIFS_8h_100v, AIFS_8h_tp, AIFS_8h_sp],
+                'CMA': [CMA_8h_2t, CMA_8h_2d, CMA_8h_100u, CMA_8h_100v, CMA_8h_tp, CMA_8h_sp],
                 'era5': [era5_8h_2t, era5_8h_2d, era5_8h_100u, era5_8h_100v, era5_8h_tp, era5_8h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1360,8 +1551,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_9h_2t, best_match_9h_2d, best_match_9h_100u, best_match_9h_100v, best_match_9h_tp, best_match_9h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_9h_2t, ecmwf_ifs_9h_2d, ecmwf_ifs_9h_100u, ecmwf_ifs_9h_100v, ecmwf_ifs_9h_tp, ecmwf_ifs_9h_sp],
                 'gfs_global': [gfs_global_9h_2t, gfs_global_9h_2d, gfs_global_9h_100u, gfs_global_9h_100v, gfs_global_9h_tp, gfs_global_9h_sp],
-                'graphcast': [graphcast_9h_2t, graphcast_9h_2d, graphcast_9h_100u, graphcast_9h_100v, graphcast_9h_tp, graphcast_9h_sp],
-                'aifs': [aifs_9h_2t, aifs_9h_2d, aifs_9h_100u, aifs_9h_100v, aifs_9h_tp, aifs_9h_sp],
+                'AIFS': [AIFS_9h_2t, AIFS_9h_2d, AIFS_9h_100u, AIFS_9h_100v, AIFS_9h_tp, AIFS_9h_sp],
+                'CMA': [CMA_9h_2t, CMA_9h_2d, CMA_9h_100u, CMA_9h_100v, CMA_9h_tp, CMA_9h_sp],
                 'era5': [era5_9h_2t, era5_9h_2d, era5_9h_100u, era5_9h_100v, era5_9h_tp, era5_9h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1369,8 +1560,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_10h_2t, best_match_10h_2d, best_match_10h_100u, best_match_10h_100v, best_match_10h_tp, best_match_10h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_10h_2t, ecmwf_ifs_10h_2d, ecmwf_ifs_10h_100u, ecmwf_ifs_10h_100v, ecmwf_ifs_10h_tp, ecmwf_ifs_10h_sp],
                 'gfs_global': [gfs_global_10h_2t, gfs_global_10h_2d, gfs_global_10h_100u, gfs_global_10h_100v, gfs_global_10h_tp, gfs_global_10h_sp],
-                'graphcast': [graphcast_10h_2t, graphcast_10h_2d, graphcast_10h_100u, graphcast_10h_100v, graphcast_10h_tp, graphcast_10h_sp],
-                'aifs': [aifs_10h_2t, aifs_10h_2d, aifs_10h_100u, aifs_10h_100v, aifs_10h_tp, aifs_10h_sp],
+                'AIFS': [AIFS_10h_2t, AIFS_10h_2d, AIFS_10h_100u, AIFS_10h_100v, AIFS_10h_tp, AIFS_10h_sp],
+                'CMA': [CMA_10h_2t, CMA_10h_2d, CMA_10h_100u, CMA_10h_100v, CMA_10h_tp, CMA_10h_sp],
                 'era5': [era5_10h_2t, era5_10h_2d, era5_10h_100u, era5_10h_100v, era5_10h_tp, era5_10h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1378,8 +1569,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_11h_2t, best_match_11h_2d, best_match_11h_100u, best_match_11h_100v, best_match_11h_tp, best_match_11h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_11h_2t, ecmwf_ifs_11h_2d, ecmwf_ifs_11h_100u, ecmwf_ifs_11h_100v, ecmwf_ifs_11h_tp, ecmwf_ifs_11h_sp],
                 'gfs_global': [gfs_global_11h_2t, gfs_global_11h_2d, gfs_global_11h_100u, gfs_global_11h_100v, gfs_global_11h_tp, gfs_global_11h_sp],
-                'graphcast': [graphcast_11h_2t, graphcast_11h_2d, graphcast_11h_100u, graphcast_11h_100v, graphcast_11h_tp, graphcast_11h_sp],
-                'aifs': [aifs_11h_2t, aifs_11h_2d, aifs_11h_100u, aifs_11h_100v, aifs_11h_tp, aifs_11h_sp],
+                'AIFS': [AIFS_11h_2t, AIFS_11h_2d, AIFS_11h_100u, AIFS_11h_100v, AIFS_11h_tp, AIFS_11h_sp],
+                'CMA': [CMA_11h_2t, CMA_11h_2d, CMA_11h_100u, CMA_11h_100v, CMA_11h_tp, CMA_11h_sp],
                 'era5': [era5_11h_2t, era5_11h_2d, era5_11h_100u, era5_11h_100v, era5_11h_tp, era5_11h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1387,8 +1578,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_12h_2t, best_match_12h_2d, best_match_12h_100u, best_match_12h_100v, best_match_12h_tp, best_match_12h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_12h_2t, ecmwf_ifs_12h_2d, ecmwf_ifs_12h_100u, ecmwf_ifs_12h_100v, ecmwf_ifs_12h_tp, ecmwf_ifs_12h_sp],
                 'gfs_global': [gfs_global_12h_2t, gfs_global_12h_2d, gfs_global_12h_100u, gfs_global_12h_100v, gfs_global_12h_tp, gfs_global_12h_sp],
-                'graphcast': [graphcast_12h_2t, graphcast_12h_2d, graphcast_12h_100u, graphcast_12h_100v, graphcast_12h_tp, graphcast_12h_sp],
-                'aifs': [aifs_12h_2t, aifs_12h_2d, aifs_12h_100u, aifs_12h_100v, aifs_12h_tp, aifs_12h_sp],
+                'AIFS': [AIFS_12h_2t, AIFS_12h_2d, AIFS_12h_100u, AIFS_12h_100v, AIFS_12h_tp, AIFS_12h_sp],
+                'CMA': [CMA_12h_2t, CMA_12h_2d, CMA_12h_100u, CMA_12h_100v, CMA_12h_tp, CMA_12h_sp],
                 'era5': [era5_12h_2t, era5_12h_2d, era5_12h_100u, era5_12h_100v, era5_12h_tp, era5_12h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1396,8 +1587,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_13h_2t, best_match_13h_2d, best_match_13h_100u, best_match_13h_100v, best_match_13h_tp, best_match_13h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_13h_2t, ecmwf_ifs_13h_2d, ecmwf_ifs_13h_100u, ecmwf_ifs_13h_100v, ecmwf_ifs_13h_tp, ecmwf_ifs_13h_sp],
                 'gfs_global': [gfs_global_13h_2t, gfs_global_13h_2d, gfs_global_13h_100u, gfs_global_13h_100v, gfs_global_13h_tp, gfs_global_13h_sp],
-                'graphcast': [graphcast_13h_2t, graphcast_13h_2d, graphcast_13h_100u, graphcast_13h_100v, graphcast_13h_tp, graphcast_13h_sp],
-                'aifs': [aifs_13h_2t, aifs_13h_2d, aifs_13h_100u, aifs_13h_100v, aifs_13h_tp, aifs_13h_sp],
+                'AIFS': [AIFS_13h_2t, AIFS_13h_2d, AIFS_13h_100u, AIFS_13h_100v, AIFS_13h_tp, AIFS_13h_sp],
+                'CMA': [CMA_13h_2t, CMA_13h_2d, CMA_13h_100u, CMA_13h_100v, CMA_13h_tp, CMA_13h_sp],
                 'era5': [era5_13h_2t, era5_13h_2d, era5_13h_100u, era5_13h_100v, era5_13h_tp, era5_13h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1405,8 +1596,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_14h_2t, best_match_14h_2d, best_match_14h_100u, best_match_14h_100v, best_match_14h_tp, best_match_14h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_14h_2t, ecmwf_ifs_14h_2d, ecmwf_ifs_14h_100u, ecmwf_ifs_14h_100v, ecmwf_ifs_14h_tp, ecmwf_ifs_14h_sp],
                 'gfs_global': [gfs_global_14h_2t, gfs_global_14h_2d, gfs_global_14h_100u, gfs_global_14h_100v, gfs_global_14h_tp, gfs_global_14h_sp],
-                'graphcast': [graphcast_14h_2t, graphcast_14h_2d, graphcast_14h_100u, graphcast_14h_100v, graphcast_14h_tp, graphcast_14h_sp],
-                'aifs': [aifs_14h_2t, aifs_14h_2d, aifs_14h_100u, aifs_14h_100v, aifs_14h_tp, aifs_14h_sp],
+                'AIFS': [AIFS_14h_2t, AIFS_14h_2d, AIFS_14h_100u, AIFS_14h_100v, AIFS_14h_tp, AIFS_14h_sp],
+                'CMA': [CMA_14h_2t, CMA_14h_2d, CMA_14h_100u, CMA_14h_100v, CMA_14h_tp, CMA_14h_sp],
                 'era5': [era5_14h_2t, era5_14h_2d, era5_14h_100u, era5_14h_100v, era5_14h_tp, era5_14h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1414,8 +1605,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_15h_2t, best_match_15h_2d, best_match_15h_100u, best_match_15h_100v, best_match_15h_tp, best_match_15h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_15h_2t, ecmwf_ifs_15h_2d, ecmwf_ifs_15h_100u, ecmwf_ifs_15h_100v, ecmwf_ifs_15h_tp, ecmwf_ifs_15h_sp],
                 'gfs_global': [gfs_global_15h_2t, gfs_global_15h_2d, gfs_global_15h_100u, gfs_global_15h_100v, gfs_global_15h_tp, gfs_global_15h_sp],
-                'graphcast': [graphcast_15h_2t, graphcast_15h_2d, graphcast_15h_100u, graphcast_15h_100v, graphcast_15h_tp, graphcast_15h_sp],
-                'aifs': [aifs_15h_2t, aifs_15h_2d, aifs_15h_100u, aifs_15h_100v, aifs_15h_tp, aifs_15h_sp],
+                'AIFS': [AIFS_15h_2t, AIFS_15h_2d, AIFS_15h_100u, AIFS_15h_100v, AIFS_15h_tp, AIFS_15h_sp],
+                'CMA': [CMA_15h_2t, CMA_15h_2d, CMA_15h_100u, CMA_15h_100v, CMA_15h_tp, CMA_15h_sp],
                 'era5': [era5_15h_2t, era5_15h_2d, era5_15h_100u, era5_15h_100v, era5_15h_tp, era5_15h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1423,8 +1614,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_16h_2t, best_match_16h_2d, best_match_16h_100u, best_match_16h_100v, best_match_16h_tp, best_match_16h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_16h_2t, ecmwf_ifs_16h_2d, ecmwf_ifs_16h_100u, ecmwf_ifs_16h_100v, ecmwf_ifs_16h_tp, ecmwf_ifs_16h_sp],
                 'gfs_global': [gfs_global_16h_2t, gfs_global_16h_2d, gfs_global_16h_100u, gfs_global_16h_100v, gfs_global_16h_tp, gfs_global_16h_sp],
-                'graphcast': [graphcast_16h_2t, graphcast_16h_2d, graphcast_16h_100u, graphcast_16h_100v, graphcast_16h_tp, graphcast_16h_sp],
-                'aifs': [aifs_16h_2t, aifs_16h_2d, aifs_16h_100u, aifs_16h_100v, aifs_16h_tp, aifs_16h_sp],
+                'AIFS': [AIFS_16h_2t, AIFS_16h_2d, AIFS_16h_100u, AIFS_16h_100v, AIFS_16h_tp, AIFS_16h_sp],
+                'CMA': [CMA_16h_2t, CMA_16h_2d, CMA_16h_100u, CMA_16h_100v, CMA_16h_tp, CMA_16h_sp],
                 'era5': [era5_16h_2t, era5_16h_2d, era5_16h_100u, era5_16h_100v, era5_16h_tp, era5_16h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1432,8 +1623,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_17h_2t, best_match_17h_2d, best_match_17h_100u, best_match_17h_100v, best_match_17h_tp, best_match_17h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_17h_2t, ecmwf_ifs_17h_2d, ecmwf_ifs_17h_100u, ecmwf_ifs_17h_100v, ecmwf_ifs_17h_tp, ecmwf_ifs_17h_sp],
                 'gfs_global': [gfs_global_17h_2t, gfs_global_17h_2d, gfs_global_17h_100u, gfs_global_17h_100v, gfs_global_17h_tp, gfs_global_17h_sp],
-                'graphcast': [graphcast_17h_2t, graphcast_17h_2d, graphcast_17h_100u, graphcast_17h_100v, graphcast_17h_tp, graphcast_17h_sp],
-                'aifs': [aifs_17h_2t, aifs_17h_2d, aifs_17h_100u, aifs_17h_100v, aifs_17h_tp, aifs_17h_sp],
+                'AIFS': [AIFS_17h_2t, AIFS_17h_2d, AIFS_17h_100u, AIFS_17h_100v, AIFS_17h_tp, AIFS_17h_sp],
+                'CMA': [CMA_17h_2t, CMA_17h_2d, CMA_17h_100u, CMA_17h_100v, CMA_17h_tp, CMA_17h_sp],
                 'era5': [era5_17h_2t, era5_17h_2d, era5_17h_100u, era5_17h_100v, era5_17h_tp, era5_17h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1441,8 +1632,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_18h_2t, best_match_18h_2d, best_match_18h_100u, best_match_18h_100v, best_match_18h_tp, best_match_18h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_18h_2t, ecmwf_ifs_18h_2d, ecmwf_ifs_18h_100u, ecmwf_ifs_18h_100v, ecmwf_ifs_18h_tp, ecmwf_ifs_18h_sp],
                 'gfs_global': [gfs_global_18h_2t, gfs_global_18h_2d, gfs_global_18h_100u, gfs_global_18h_100v, gfs_global_18h_tp, gfs_global_18h_sp],
-                'graphcast': [graphcast_18h_2t, graphcast_18h_2d, graphcast_18h_100u, graphcast_18h_100v, graphcast_18h_tp, graphcast_18h_sp],
-                'aifs': [aifs_18h_2t, aifs_18h_2d, aifs_18h_100u, aifs_18h_100v, aifs_18h_tp, aifs_18h_sp],
+                'AIFS': [AIFS_18h_2t, AIFS_18h_2d, AIFS_18h_100u, AIFS_18h_100v, AIFS_18h_tp, AIFS_18h_sp],
+                'CMA': [CMA_18h_2t, CMA_18h_2d, CMA_18h_100u, CMA_18h_100v, CMA_18h_tp, CMA_18h_sp],
                 'era5': [era5_18h_2t, era5_18h_2d, era5_18h_100u, era5_18h_100v, era5_18h_tp, era5_18h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1450,8 +1641,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_19h_2t, best_match_19h_2d, best_match_19h_100u, best_match_19h_100v, best_match_19h_tp, best_match_19h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_19h_2t, ecmwf_ifs_19h_2d, ecmwf_ifs_19h_100u, ecmwf_ifs_19h_100v, ecmwf_ifs_19h_tp, ecmwf_ifs_19h_sp],
                 'gfs_global': [gfs_global_19h_2t, gfs_global_19h_2d, gfs_global_19h_100u, gfs_global_19h_100v, gfs_global_19h_tp, gfs_global_19h_sp],
-                'graphcast': [graphcast_19h_2t, graphcast_19h_2d, graphcast_19h_100u, graphcast_19h_100v, graphcast_19h_tp, graphcast_19h_sp],
-                'aifs': [aifs_19h_2t, aifs_19h_2d, aifs_19h_100u, aifs_19h_100v, aifs_19h_tp, aifs_19h_sp],
+                'AIFS': [AIFS_19h_2t, AIFS_19h_2d, AIFS_19h_100u, AIFS_19h_100v, AIFS_19h_tp, AIFS_19h_sp],
+                'CMA': [CMA_19h_2t, CMA_19h_2d, CMA_19h_100u, CMA_19h_100v, CMA_19h_tp, CMA_19h_sp],
                 'era5': [era5_19h_2t, era5_19h_2d, era5_19h_100u, era5_19h_100v, era5_19h_tp, era5_19h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             },
@@ -1459,19 +1650,56 @@ def process_rar_file(rar_path, data_dir, result_dir):
                 'best_match': [best_match_20h_2t, best_match_20h_2d, best_match_20h_100u, best_match_20h_100v, best_match_20h_tp, best_match_20h_sp],
                 'ecmwf_ifs': [ecmwf_ifs_20h_2t, ecmwf_ifs_20h_2d, ecmwf_ifs_20h_100u, ecmwf_ifs_20h_100v, ecmwf_ifs_20h_tp, ecmwf_ifs_20h_sp],
                 'gfs_global': [gfs_global_20h_2t, gfs_global_20h_2d, gfs_global_20h_100u, gfs_global_20h_100v, gfs_global_20h_tp, gfs_global_20h_sp],
-                'graphcast': [graphcast_20h_2t, graphcast_20h_2d, graphcast_20h_100u, graphcast_20h_100v, graphcast_20h_tp, graphcast_20h_sp],
-                'aifs': [aifs_20h_2t, aifs_20h_2d, aifs_20h_100u, aifs_20h_100v, aifs_20h_tp, aifs_20h_sp],
+                'AIFS': [AIFS_20h_2t, AIFS_20h_2d, AIFS_20h_100u, AIFS_20h_100v, AIFS_20h_tp, AIFS_20h_sp],
+                'CMA': [CMA_20h_2t, CMA_20h_2d, CMA_20h_100u, CMA_20h_100v, CMA_20h_tp, CMA_20h_sp],
                 'era5': [era5_20h_2t, era5_20h_2d, era5_20h_100u, era5_20h_100v, era5_20h_tp, era5_20h_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '21h': {
+                'best_match': [best_match_21h_2t, best_match_21h_2d, best_match_21h_100u, best_match_21h_100v, best_match_21h_tp, best_match_21h_sp],
+                'ecmwf_ifs': [ecmwf_ifs_21h_2t, ecmwf_ifs_21h_2d, ecmwf_ifs_21h_100u, ecmwf_ifs_21h_100v, ecmwf_ifs_21h_tp, ecmwf_ifs_21h_sp],
+                'gfs_global': [gfs_global_21h_2t, gfs_global_21h_2d, gfs_global_21h_100u, gfs_global_21h_100v, gfs_global_21h_tp, gfs_global_21h_sp],
+                'AIFS': [AIFS_21h_2t, AIFS_21h_2d, AIFS_21h_100u, AIFS_21h_100v, AIFS_21h_tp, AIFS_21h_sp],
+                'CMA': [CMA_21h_2t, CMA_21h_2d, CMA_21h_100u, CMA_21h_100v, CMA_21h_tp, CMA_21h_sp],
+                'era5': [era5_21h_2t, era5_21h_2d, era5_21h_100u, era5_21h_100v, era5_21h_tp, era5_21h_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '22h': {
+                'best_match': [best_match_22h_2t, best_match_22h_2d, best_match_22h_100u, best_match_22h_100v, best_match_22h_tp, best_match_22h_sp],
+                'ecmwf_ifs': [ecmwf_ifs_22h_2t, ecmwf_ifs_22h_2d, ecmwf_ifs_22h_100u, ecmwf_ifs_22h_100v, ecmwf_ifs_22h_tp, ecmwf_ifs_22h_sp],
+                'gfs_global': [gfs_global_22h_2t, gfs_global_22h_2d, gfs_global_22h_100u, gfs_global_22h_100v, gfs_global_22h_tp, gfs_global_22h_sp],
+                'AIFS': [AIFS_22h_2t, AIFS_22h_2d, AIFS_22h_100u, AIFS_22h_100v, AIFS_22h_tp, AIFS_22h_sp],
+                'CMA': [CMA_22h_2t, CMA_22h_2d, CMA_22h_100u, CMA_22h_100v, CMA_22h_tp, CMA_22h_sp],
+                'era5': [era5_22h_2t, era5_22h_2d, era5_22h_100u, era5_22h_100v, era5_22h_tp, era5_22h_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '23h': {
+                'best_match': [best_match_23h_2t, best_match_23h_2d, best_match_23h_100u, best_match_23h_100v, best_match_23h_tp, best_match_23h_sp],
+                'ecmwf_ifs': [ecmwf_ifs_23h_2t, ecmwf_ifs_23h_2d, ecmwf_ifs_23h_100u, ecmwf_ifs_23h_100v, ecmwf_ifs_23h_tp, ecmwf_ifs_23h_sp],
+                'gfs_global': [gfs_global_23h_2t, gfs_global_23h_2d, gfs_global_23h_100u, gfs_global_23h_100v, gfs_global_23h_tp, gfs_global_23h_sp],
+                'AIFS': [AIFS_23h_2t, AIFS_23h_2d, AIFS_23h_100u, AIFS_23h_100v, AIFS_23h_tp, AIFS_23h_sp],
+                'CMA': [CMA_23h_2t, CMA_23h_2d, CMA_23h_100u, CMA_23h_100v, CMA_23h_tp, CMA_23h_sp],
+                'era5': [era5_23h_2t, era5_23h_2d, era5_23h_100u, era5_23h_100v, era5_23h_tp, era5_23h_sp],
+                'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
+            },
+            '24h': {
+                'best_match': [best_match_24h_2t, best_match_24h_2d, best_match_24h_100u, best_match_24h_100v, best_match_24h_tp, best_match_24h_sp],
+                'ecmwf_ifs': [ecmwf_ifs_24h_2t, ecmwf_ifs_24h_2d, ecmwf_ifs_24h_100u, ecmwf_ifs_24h_100v, ecmwf_ifs_24h_tp, ecmwf_ifs_24h_sp],
+                'gfs_global': [gfs_global_24h_2t, gfs_global_24h_2d, gfs_global_24h_100u, gfs_global_24h_100v, gfs_global_24h_tp, gfs_global_24h_sp],
+                'AIFS': [AIFS_24h_2t, AIFS_24h_2d, AIFS_24h_100u, AIFS_24h_100v, AIFS_24h_tp, AIFS_24h_sp],
+                'CMA': [CMA_24h_2t, CMA_24h_2d, CMA_24h_100u, CMA_24h_100v, CMA_24h_tp, CMA_24h_sp],
+                'era5': [era5_24h_2t, era5_24h_2d, era5_24h_100u, era5_24h_100v, era5_24h_tp, era5_24h_sp],
                 'feature_names': ['temperature_2t', 'dewpoint_2d', 'u100_100u', 'v100_100v', 'precipitation_tp', 'sp']
             }
         }
+
         
         # Use diverging colormap for better contrast
         cmap = 'RdBu_r'  # or 'coolwarm', 'seismic', 'bwr'
         
         # Process each hour separately
         try:
-            for hour in ['1h', '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '15h', '16h', '17h', '18h', '19h', '20h']:
+            for hour in ['1h', '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '15h', '16h', '17h', '18h', '19h', '20h', '21h', '22h', '23h', '24h']:
                 hour_data = hours_data[hour]
                 
                 # Check if PNG already exists for this hour
@@ -1488,8 +1716,8 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     best_match_data = hour_data['best_match'][row_idx]
                     ecmwf_ifs_data = hour_data['ecmwf_ifs'][row_idx]
                     gfs_global_data = hour_data['gfs_global'][row_idx]
-                    graphcast_data = hour_data['graphcast'][row_idx]
-                    aifs_data = hour_data['aifs'][row_idx]
+                    AIFS_data = hour_data['AIFS'][row_idx]
+                    CMA_data = hour_data['CMA'][row_idx]
                     era5_data = hour_data['era5'][row_idx]
                     feature_name = hour_data['feature_names'][row_idx]
                     
@@ -1497,20 +1725,20 @@ def process_rar_file(rar_path, data_dir, result_dir):
                     rmse_best_match = np.flip(np.abs(best_match_data - era5_data), axis=0)
                     rmse_ecmwf_ifs = np.flip(np.abs(ecmwf_ifs_data - era5_data), axis=0)
                     rmse_gfs_global = np.flip(np.abs(gfs_global_data - era5_data), axis=0)
-                    rmse_graphcast = np.flip(np.abs(graphcast_data - era5_data), axis=0)
-                    rmse_aifs = np.flip(np.abs(aifs_data - era5_data), axis=0)
+                    rmse_AIFS = np.flip(np.abs(AIFS_data - era5_data), axis=0)
+                    rmse_CMA = np.flip(np.abs(CMA_data - era5_data), axis=0)
                     
                     global_rmse_ecmwf_ifs = np.sqrt(np.mean(rmse_ecmwf_ifs ** 2))
                     global_rmse_best_match = np.sqrt(np.mean(rmse_best_match ** 2)) - global_rmse_ecmwf_ifs
                     global_rmse_gfs_global = np.sqrt(np.mean(rmse_gfs_global ** 2)) - global_rmse_ecmwf_ifs
-                    global_rmse_graphcast = np.sqrt(np.mean(rmse_graphcast ** 2)) - global_rmse_ecmwf_ifs
-                    global_rmse_aifs = np.sqrt(np.mean(rmse_aifs ** 2)) - global_rmse_ecmwf_ifs
+                    global_rmse_AIFS = np.sqrt(np.mean(rmse_AIFS ** 2)) - global_rmse_ecmwf_ifs
+                    global_rmse_CMA = np.sqrt(np.mean(rmse_CMA ** 2)) - global_rmse_ecmwf_ifs
 
                     # Calculate differences relative to ECMWF
                     data1 = rmse_best_match - rmse_ecmwf_ifs
                     data3 = rmse_gfs_global - rmse_ecmwf_ifs
-                    data4 = rmse_graphcast - rmse_ecmwf_ifs
-                    data5 = rmse_aifs - rmse_ecmwf_ifs
+                    data4 = rmse_AIFS - rmse_ecmwf_ifs
+                    data5 = rmse_CMA - rmse_ecmwf_ifs
                     
                     # Find global min/max for symmetric color scaling
                     vmax = max(np.abs(data1).max(), np.abs(data3).max(), np.abs(data4).max(), np.abs(data5).max())
@@ -1537,15 +1765,15 @@ def process_rar_file(rar_path, data_dir, result_dir):
                                           transform=axes[row_idx, 2].transAxes, ha='center', va='top', fontsize=9)
                     
                     im3 = axes[row_idx, 3].imshow(data4, cmap=cmap, vmin=vmin, vmax=vmax)
-                    axes[row_idx, 3].set_title(f'{feature_name} ({hour})\nGraphcast - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 3].set_title(f'{feature_name} ({hour})\nAIFS - ECMWF\n(relative to ERA5)')
                     axes[row_idx, 3].axis('off')
-                    axes[row_idx, 3].text(0.5, -0.08, f'Global RMSE: {global_rmse_graphcast:.4f}', 
+                    axes[row_idx, 3].text(0.5, -0.08, f'Global RMSE: {global_rmse_AIFS:.4f}', 
                                           transform=axes[row_idx, 3].transAxes, ha='center', va='top', fontsize=9)
                     
                     im4 = axes[row_idx, 4].imshow(data5, cmap=cmap, vmin=vmin, vmax=vmax)
-                    axes[row_idx, 4].set_title(f'{feature_name} ({hour})\nAIFS - ECMWF\n(relative to ERA5)')
+                    axes[row_idx, 4].set_title(f'{feature_name} ({hour})\nCMA - ECMWF\n(relative to ERA5)')
                     axes[row_idx, 4].axis('off')
-                    axes[row_idx, 4].text(0.5, -0.08, f'Global RMSE: {global_rmse_aifs:.4f}', 
+                    axes[row_idx, 4].text(0.5, -0.08, f'Global RMSE: {global_rmse_CMA:.4f}', 
                                           transform=axes[row_idx, 4].transAxes, ha='center', va='top', fontsize=9)
 
                     # Add colorbars
